@@ -3,6 +3,7 @@ import Container from "./Container";
 import Stage from "./Stage";
 
 export default class DisplayObject extends EventDispatcher {
+  [x: string]: any;
   public visible: boolean
   public renderable: boolean
   public stage: Stage

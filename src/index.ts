@@ -9,8 +9,9 @@ import Container from './display/Container'
 import Stage from './display/Stage'
 import Sprite from './display/Sprite'
 
+import Timer from './utils/Timer'
 
-const tyro2d = {
+export const tyro2d = {
   // math
   math,
   Vector2d,
@@ -25,6 +26,5 @@ const tyro2d = {
   Container,
 
   // utils
+  Timer,
 }
-
-export default tyro2d
