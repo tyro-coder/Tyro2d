@@ -5,7 +5,7 @@ import Event from './event/Event'
 import EventDispatcher from './event/EventDispatcher'
 
 /** Display */
-import Node from './display/Node'
+import Container from './display/Container'
 import Stage from './display/Stage'
 import Sprite from './display/Sprite'
 
@@ -20,9 +20,9 @@ const tyro2d = {
   EventDispatcher,
 
   // display 节点
-  Node,
   Stage,
   Sprite,
+  Container,
 
   // utils
 }

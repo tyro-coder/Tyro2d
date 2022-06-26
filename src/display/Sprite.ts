@@ -1,5 +1,5 @@
-import Node from "./Node";
+import DisplayObject from "./DisplayObject"
 
-export default class Sprite extends Node {
+export default class Sprite extends DisplayObject {
   protected _instanceType: string = 'Sprite'
 }
