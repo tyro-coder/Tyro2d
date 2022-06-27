@@ -145,7 +145,9 @@ export default class EventDispatcher extends HashObject {
     }
   }
 
-  destory(): void {}
+  destroy(): void {
+    
+  }
 }
 
 /**@private */

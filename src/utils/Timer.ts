@@ -3,25 +3,29 @@ import Utils from "./Utils";
 
 export default class Timer {
   /**@private */
-  static gSysTimer: Timer = null;
+  static systemTimer: Timer = null;
   /** 方法id */
   static _mid: number = 1
-  /** 时针缩放 */
-  scale: number = 1
+  /** 对象池 */
+  static _pool: TimerHandler[] = []
+
+  /** 时钟缩放 */
+  timeScale: number = 1
   /** 当前帧开始时间 */
   currTime: number = Browser.now()
   /** 当前帧数 */
   currFrame: number = 0
 
-
   /** 两帧之间的时间间隔 */
   private _delta: number = 0
   private _map: {[key: string]: TimerHandler} = {}
   private _lastTimer: number = Browser.now()
-  private _handers: TimerHandler[] = []
+  private _handlers: TimerHandler[] = []
+  private _count: number = 0
+  private _tempHandlers: TimerHandler[] = []
 
   constructor(autoActive: boolean = true) {
-    autoActive && Timer.gSysTimer && Timer.gSysTimer.frameLoop(1, this, this._update)
+    autoActive && Timer.systemTimer && Timer.systemTimer.frameLoop(1, this, this._update)
   }
 
   get delta(): number {
@@ -157,8 +161,7 @@ export default class Timer {
       return handler
     }
 
-    // TODO:后面再做优化
-    handler = new TimerHandler()
+    handler = Timer._pool.length > 0 ? Timer._pool.pop() : new TimerHandler()
     handler.repeat = repeat
     handler.userFrame = useFrame
     handler.delay = delay
@@ -168,7 +171,7 @@ export default class Timer {
     handler.exeTime = delay + (useFrame ? this.currFrame : this.currTime + Browser.now() - this._lastTimer)
 
     this._indexHandler(handler)
-    this._handers.push(handler)
+    this._handlers.push(handler)
     
     return handler
   }
@@ -182,11 +185,71 @@ export default class Timer {
     this._map[handler.key] = handler;
   }
 
-  _update() {
+  /**
+   * 帧循环处理函数
+   */
+  _update(): void {
+    if (this.timeScale <= 0) {
+      this._lastTimer = Browser.now()
+      this._delta = 0
+      return
+    }
 
+    let frame: number = this.currFrame = this.currFrame + this.timeScale
+    let now: number = Browser.now()
+    this._delta = (now - this._lastTimer) * this.timeScale
+    let time: number = this.currTime = this.currTime + this._delta
+    this._lastTimer = now
+
+    // 执行 handlers 里面的所有 handler
+    const handlers: TimerHandler[] = this._handlers
+    this._count = 0
+    for (let i: number = 0; i < handlers.length; i++) {
+      const handler: TimerHandler = handlers[i]
+      if (typeof handler.method === 'function') {
+        let t: number = handler.userFrame ? frame : time
+        if (t <= handler.exeTime) continue
+        
+        if (handler.repeat) { // 循环的
+          while (t >= handler.exeTime) {
+            handler.exeTime += handler.delay
+            handler.run(false)
+          }
+        } else {
+          handler.run(true)
+        }
+      } else {
+        this._count++
+      }
+    }
+
+    if (this._count > 30 || frame % 200 === 0) this._clearHandlers()
   }
 
-  /** @private */
+  private _clearHandlers(): void {
+    const handlers: TimerHandler[] = this._handlers
+    for (let i: number = 0; i < handlers.length; i++) {
+      const handler: TimerHandler = handlers[i]
+      if (typeof handler.method === 'function') this._tempHandlers.push(handler)
+      else this._recoverHandler(handler)
+    }
+    this._handlers = this._tempHandlers
+    handlers.length = 0
+    this._tempHandlers = handlers
+  }
+
+  private _recoverHandler(handler: TimerHandler): void {
+    if (this._map[handler.key] === handler) delete this._map[handler.key]
+    handler.clear()
+    Timer._pool.push(handler)
+  }
+
+  /**
+   * 根据执行上下文和方法获取对应的 TimerHandler
+   * @param caller 执行上下文
+   * @param method 方法
+   * @returns 
+   */
   private _getHandler(caller: any, method: any): TimerHandler {
     var cid: number = caller ? caller.$_GID || (caller.$_GID =Utils.getGID()) : 0;
     var mid: number = method.$_TID || (method.$_TID = Timer._mid++);
@@ -197,14 +260,23 @@ export default class Timer {
 
 /** @private */
 class TimerHandler {
+  /** 唯一id */
   key: string;
+  /** 是否循环往复 */
   repeat: boolean;
+  /** 延迟执行时间 */
   delay: number;
+  /** 根据帧数执行，否则根据时间执行 */
   userFrame: boolean;
+  /** 下一次执行的时间 */
   exeTime: number;
+  /** 执行上下文 */
   caller: any
+  /** 回调方法 */
   method: Function;
+  /** 回调方法的参数 */
   args: any[];
+  /** 是否跳过帧 */
   jumpFrame: boolean;
 
   clear(): void {
@@ -213,9 +285,15 @@ class TimerHandler {
       this.args = null;
   }
 
+  /**
+   * 执行时钟管理者内注册的方法
+   * @param withClear 是否执行后删除
+   * @returns 
+   */
   run(withClear: boolean): void {
       var caller: any = this.caller;
       if (caller && caller.destroyed) return this.clear();
+
       var method: Function = this.method;
       var args: any[] = this.args;
       withClear && this.clear();

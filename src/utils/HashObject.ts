@@ -24,5 +24,5 @@ export default abstract class HashObject {
     return this._instanceType
   }
 
-  abstract destory(): void
+  abstract destroy(): void
 }

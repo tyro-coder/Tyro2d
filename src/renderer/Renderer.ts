@@ -21,6 +21,8 @@ export default abstract class Renderer extends HashObject {
 
   abstract endDraw(target: DisplayObject): void
 
+  abstract transform(target: DisplayObject): void
+
   destory(): void {
   }
 }

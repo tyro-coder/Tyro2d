@@ -19,4 +19,8 @@ export default class Stage extends Container {
   constructor() {
     super()
   }
+
+  static isStage(val: any) {
+    return val instanceof Stage
+  }
 }
