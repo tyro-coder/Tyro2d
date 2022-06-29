@@ -12,14 +12,14 @@ export default class Timer {
   /** 时钟缩放 */
   timeScale: number = 1
   /** 当前帧开始时间 */
-  currTime: number = Browser.now()
+  currTime: number = Browser.now
   /** 当前帧数 */
   currFrame: number = 0
 
   /** 两帧之间的时间间隔 */
   private _delta: number = 0
   private _map: {[key: string]: TimerHandler} = {}
-  private _lastTimer: number = Browser.now()
+  private _lastTimer: number = Browser.now
   private _handlers: TimerHandler[] = []
   private _count: number = 0
   private _tempHandlers: TimerHandler[] = []
@@ -156,7 +156,7 @@ export default class Timer {
         handler.caller = caller
         handler.method = method
         handler.args = args
-        handler.exeTime = delay + (useFrame ? this.currFrame : this.currTime + Browser.now() - this._lastTimer)
+        handler.exeTime = delay + (useFrame ? this.currFrame : this.currTime + Browser.now - this._lastTimer)
       }
       return handler
     }
@@ -168,7 +168,7 @@ export default class Timer {
     handler.caller = caller
     handler.method = method
     handler.args = args
-    handler.exeTime = delay + (useFrame ? this.currFrame : this.currTime + Browser.now() - this._lastTimer)
+    handler.exeTime = delay + (useFrame ? this.currFrame : this.currTime + Browser.now - this._lastTimer)
 
     this._indexHandler(handler)
     this._handlers.push(handler)
@@ -190,13 +190,13 @@ export default class Timer {
    */
   _update(): void {
     if (this.timeScale <= 0) {
-      this._lastTimer = Browser.now()
+      this._lastTimer = Browser.now
       this._delta = 0
       return
     }
 
     let frame: number = this.currFrame = this.currFrame + this.timeScale
-    let now: number = Browser.now()
+    let now: number = Browser.now
     this._delta = (now - this._lastTimer) * this.timeScale
     let time: number = this.currTime = this.currTime + this._delta
     this._lastTimer = now

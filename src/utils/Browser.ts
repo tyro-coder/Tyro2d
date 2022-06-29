@@ -1,7 +1,7 @@
 export default class Browser {
-  private static _inited: boolean = false
+  private static _initd: boolean = false
   /** @private */
-  private static _window: Window;
+  private static _window: Window & typeof globalThis;
   /** @private */
   private static _document: Document;
   /** 浏览器代理信息 */
@@ -16,15 +16,35 @@ export default class Browser {
    * 获取浏览器当前时间，毫秒
    * @returns 毫秒
    */
-  static now(): number {
+  static get now(): number {
     return window.performance.now() || Date.now()
+  }
+
+  /**
+   * 获取浏览器的全局对象 window
+   * @returns Window
+   */
+  static get win(): Window & typeof globalThis {
+    if (Browser._initd) return Browser._window
+    Browser.__init__()
+    return Browser._window
+  }
+
+  /**
+   * 获取body的DOM实例
+   * @returns Body Element
+   */
+  static get docElem(): HTMLElement {
+    if (Browser._initd) return Browser._document.documentElement
+    Browser.__init__()
+    return Browser._document.documentElement
   }
 
   /**
    * 浏览器用户标识
    */
   static get userAgent(): string {
-    if (Browser._inited) return Browser._userAgent
+    if (Browser._initd) return Browser._userAgent
     Browser.__init__()
     return Browser._userAgent
   }
@@ -33,7 +53,7 @@ export default class Browser {
    * 是否是 IOS 系统
    */
   static get isIos(): boolean {
-    if (Browser._inited) return Browser._isIos
+    if (Browser._initd) return Browser._isIos
     Browser.__init__()
     return Browser._isIos
   }
@@ -42,7 +62,7 @@ export default class Browser {
    * 是否是 Android 系统
    */
   static get isAndroid(): boolean {
-    if (Browser._inited) return Browser._isAndroid
+    if (Browser._initd) return Browser._isAndroid
     Browser.__init__()
     return Browser._isAndroid
   }
@@ -51,7 +71,7 @@ export default class Browser {
    * 获取文档对象
    */
   static get document(): Document {
-    if (Browser._inited) return Browser._document
+    if (Browser._initd) return Browser._document
     Browser.__init__()
     return Browser._document
   }
@@ -71,13 +91,13 @@ export default class Browser {
 
   /** 浏览器厂商CSS前缀的js值 */
   static get jsVendor(): string {
-    if (Browser._inited) return Browser._jsVendor
+    if (Browser._initd) return Browser._jsVendor
     Browser.__init__()
     return Browser._jsVendor
   }
 
   static __init__(): Window {
-    if (Browser._inited) return Browser._window
+    if (Browser._initd) return Browser._window
     var win: Window = Browser._window = window
     var doc: Document = Browser._document = win.document
     var ua: string = Browser._userAgent = win.navigator.userAgent
@@ -93,7 +113,7 @@ export default class Browser {
     }
     Browser._jsVendor = Object.keys(jsVendorMap).find(key => jsVendorMap[key]) || ''
 
-    Browser._inited = true
+    Browser._initd = true
     return Browser._window
   }
 }

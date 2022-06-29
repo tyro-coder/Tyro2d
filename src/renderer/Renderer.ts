@@ -23,6 +23,9 @@ export default abstract class Renderer extends HashObject {
 
   abstract transform(target: DisplayObject): void
 
-  destory(): void {
+  abstract resize(width: number, height: number): void
+
+  destroy(): void {
+    
   }
 }

@@ -24,7 +24,7 @@ export default class Ticker {
    */
   start(useRAF: boolean = true) {
     if (this._intervalId) return;
-    this._lastTime = Browser.now();
+    this._lastTime = Browser.now;
 
     var self = this,
       interval = this._interval,
@@ -139,10 +139,10 @@ export default class Ticker {
    */
   timeout(callback: Function, duration: number): ITicker {
     var that = this;
-    var targetTime = Browser.now() + duration;
+    var targetTime = Browser.now + duration;
     var tickObj: ITicker = {
       tick: function () {
-        var nowTime = Browser.now();
+        var nowTime = Browser.now;
         var dt = nowTime - targetTime;
         if (dt >= 0) {
           that.removeTick(tickObj);
@@ -162,10 +162,10 @@ export default class Ticker {
    */
   interval(callback: Function, duration: number): ITicker {
     var that = this;
-    var targetTime = Browser.now() + duration;
+    var targetTime = Browser.now + duration;
     var tickObj: ITicker = {
       tick: function () {
-        var nowTime = Browser.now();
+        var nowTime = Browser.now;
         var dt = nowTime - targetTime;
         if (dt >= 0) {
           if (dt < duration) {
@@ -182,7 +182,7 @@ export default class Ticker {
 
   private _tick() {
     if (this._paused) return;
-    var startTime = Browser.now(),
+    var startTime = Browser.now,
       deltaTime = startTime - this._lastTime,
       tickers = this._tickers;
 

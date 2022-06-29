@@ -87,7 +87,7 @@ export default class Tween {
     this._delay = delay;
     this._props = [];
     this._usedTimer = 0;
-    this._startTimer = Browser.now();
+    this._startTimer = Browser.now;
     this._usedPool = usePool;
     this._delayParam = null;
     this.update = props.update;
@@ -142,7 +142,7 @@ export default class Tween {
 
   /**执行缓动**/
   private _doEase(): void {
-    this._updateEase(Browser.now());
+    this._updateEase(Browser.now);
   }
 
   /**@internal */
@@ -206,7 +206,7 @@ export default class Tween {
     TimerManager.timer.clear(this, this._beginLoop);
     TimerManager.timer.clear(this, this._doEase);
     TimerManager.timer.clear(this, this.firstStart);
-    var time: number = Browser.now();
+    var time: number = Browser.now;
     var dTime: number;
     dTime = time - this._startTimer - this._delay;
     if (dTime < 0) {
@@ -298,7 +298,7 @@ export default class Tween {
   restart(): void {
     this.pause();
     this._usedTimer = 0;
-    this._startTimer = Browser.now();
+    this._startTimer = Browser.now;
     if (this._delayParam) {
       TimerManager.timer.once(this._delay, this, this.firstStart, this._delayParam);
       return;
@@ -316,7 +316,7 @@ export default class Tween {
    */
   resume(): void {
     if (this._usedTimer >= this._duration) return;
-    this._startTimer = Browser.now() - this._usedTimer - this._delay;
+    this._startTimer = Browser.now - this._usedTimer - this._delay;
     if (this._delayParam) {
       if (this._usedTimer < 0) {
         TimerManager.timer.once(

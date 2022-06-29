@@ -4,6 +4,7 @@ import Container from "./Container";
 import Stage from "./Stage";
 
 export default class DisplayObject extends EventDispatcher {
+  public $_GID: number
   /** 可视对象是否可见，默认为true */
   public visible: boolean = true
   /** 可视对象的名字 */
