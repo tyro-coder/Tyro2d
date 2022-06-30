@@ -2,7 +2,6 @@ import DisplayObject from "../display/DisplayObject";
 import Browser from "../utils/Browser";
 import Handler from "../utils/Handler";
 import Pool from "../utils/Pool";
-import TimerManager from "../utils/TimerManager";
 import Utils from "../utils/Utils";
 
 interface IDisplayObjectProps {

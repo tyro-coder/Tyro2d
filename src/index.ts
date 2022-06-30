@@ -1,4 +1,4 @@
-import * as math from './math/math'
+import * as math from './math/MathTool'
 import Vector2d from './math/Vector2d'
 
 import Event from './event/Event'

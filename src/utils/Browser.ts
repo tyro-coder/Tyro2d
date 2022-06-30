@@ -98,11 +98,11 @@ export default class Browser {
 
   static __init__(): Window {
     if (Browser._initd) return Browser._window
-    var win: Window = Browser._window = window
-    var doc: Document = Browser._document = win.document
-    var ua: string = Browser._userAgent = win.navigator.userAgent
-    var maxTouchPoints: number = win.navigator.maxTouchPoints || 0
-    var platform:string = win.navigator.platform
+    const win: Window = Browser._window = window
+    const doc: Document = Browser._document = win.document
+    const ua: string = Browser._userAgent = win.navigator.userAgent
+    const maxTouchPoints: number = win.navigator.maxTouchPoints || 0
+    const platform:string = win.navigator.platform
 
     Browser._isIos = /iphone|ipad|ipod/i.test(ua)
     Browser._isAndroid = /android/i.test(ua)

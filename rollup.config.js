@@ -11,7 +11,8 @@ module.exports = {
   input: resolvePath('src/index.ts'),
   output: {
     file: resolvePath('dist/index.js'),
-    format: 'umd'
+    format: 'umd',
+    name: 'index'
   },
   plugins: [
     resolve(), // 查找和打包 node_modules 中的第三方模块

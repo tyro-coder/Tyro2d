@@ -1,8 +1,8 @@
 import HashObject from '../utils/HashObject';
 import Pool from '../utils/Pool';
-import { clamp } from './math';
+import MathTool from './MathTool';
 
-class Vector2d extends HashObject {
+export default class Vector2d extends HashObject {
   destroy(): void {
   }
 
@@ -105,7 +105,7 @@ class Vector2d extends HashObject {
    * @returns 
    */
   clamp(low: number, high: number): Vector2d {
-    return Vector2d.create().set(clamp(this.x, low, high), clamp(this.y, low, high));
+    return Vector2d.create().set(MathTool.clamp(this.x, low, high), MathTool.clamp(this.y, low, high));
   }
 
   /**
@@ -115,7 +115,7 @@ class Vector2d extends HashObject {
    * @returns
    */
   clampSelf(low: number, high: number): Vector2d {
-    return this._set(clamp(this.x, low, high), clamp(this.y, low, high))
+    return this._set(MathTool.clamp(this.x, low, high), MathTool.clamp(this.y, low, high))
   }
 
   /**
@@ -277,7 +277,7 @@ class Vector2d extends HashObject {
    * @returns 
    */
   angle(v: Vector2d): number {
-    return Math.acos(clamp(this.dotProduct(v) / (this.length() * v.length()), -1, 1));
+    return Math.acos(MathTool.clamp(this.dotProduct(v) / (this.length() * v.length()), -1, 1));
   }
 
   /**
@@ -307,5 +307,3 @@ class Vector2d extends HashObject {
     return this;
   }
 }
-
-export default Vector2d;

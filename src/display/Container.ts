@@ -1,4 +1,4 @@
-import { clamp } from "../math/math";
+import MathTool from "../math/MathTool";
 import DisplayObject from "./DisplayObject";
 
 export default class Container extends DisplayObject {
@@ -31,7 +31,7 @@ export default class Container extends DisplayObject {
   addChild(child: DisplayObject): DisplayObject {
     if (!child || this.destroyed || child === this) return child
     if (child.parent === this) {
-      var index: number = this.getChildIndex(child)
+      const index: number = this.getChildIndex(child)
       if (index !== this._children.length - 1) {
         this._children.splice(index, 1)
         this._children.push(child)
@@ -57,7 +57,7 @@ export default class Container extends DisplayObject {
     if (!child || this.destroyed || child === this) return child
     if (index >= 0 && index <= this._children.length) {
       if (child.parent === this) {
-        var oldIndex: number = this.getChildIndex(child)
+        const oldIndex: number = this.getChildIndex(child)
         this._children.splice(oldIndex, 1)
         this._children.splice(index, 0, child)
         this._childChanged()
@@ -78,7 +78,8 @@ export default class Container extends DisplayObject {
    * @param ...args 无数子节点
    */
   addChildren(...args: any[]): void {
-    var i: number = 0, n: number = args.length;
+    let i: number = 0
+    const n: number = args.length;
     while(i < n) {
       this.addChild(args[i++])
     }
@@ -99,10 +100,10 @@ export default class Container extends DisplayObject {
    * @returns 节点对象
    */
   getChildByName(name: string): DisplayObject|null {
-    var children: any[] = this._children
+    const children: any[] = this._children
     if (children) {
       for (let i: number = 0, n: number = children.length; i<n; i++) {
-        var child: DisplayObject = children[i]
+        const child: DisplayObject = children[i]
         if (!child) continue
         if (child.name === name) return child
       }
@@ -126,12 +127,12 @@ export default class Container extends DisplayObject {
    * @returns 返回子节点本身
    */
   setChildIndex(child: DisplayObject, index: number): DisplayObject {
-    var childs: any[] = this._children
+    const childs: any[] = this._children
     if (index < 0 || index >= childs.length) {
       throw new Error('setChildIndex: The index is out of bounds.')
     }
 
-    var oldIndex: number = this.getChildIndex(child)
+    const oldIndex: number = this.getChildIndex(child)
     if (oldIndex < 0) throw new Error('setChildIndex: node is must child of this object.')
     childs.splice(oldIndex, 1)
     childs.splice(index, 0, child)
@@ -146,7 +147,7 @@ export default class Container extends DisplayObject {
    */
   removeChild(child: DisplayObject): DisplayObject {
     if (!this._children) return child
-    var index: number = this._children.indexOf(child)
+    const index: number = this._children.indexOf(child)
     return this.removeChildAt(index)
   }
 
@@ -156,7 +157,7 @@ export default class Container extends DisplayObject {
    * @returns 被删除的节点
    */
   removeChildByName(name: string): DisplayObject|null {
-    var child: DisplayObject|null = this.getChildByName(name)
+    const child: DisplayObject|null = this.getChildByName(name)
     child && this.removeChild(child)
     return child
   }
@@ -167,7 +168,7 @@ export default class Container extends DisplayObject {
    * @return 被删除的节点
    */
   removeChildAt(index: number): DisplayObject {
-    var child: DisplayObject = this.getChildAt(index)
+    const child: DisplayObject = this.getChildAt(index)
     if (child) {
       this._children.splice(index, 1)
       child.parent = null
@@ -183,15 +184,14 @@ export default class Container extends DisplayObject {
    */
   removeChildren(beginIndex: number = 0, endIndex: number = 0x7fffffff): Container {
     if (this._children && this._children.length > 0) {
-      var childs: any[] = this._children;
+      let childs: any[] = this._children;
       if (beginIndex === 0 && endIndex >= childs.length - 1) {
-          var arr: any[] = childs;
           this._children = Container.ARRAY_EMPTY;
       } else {
-          arr = childs.splice(beginIndex, endIndex - beginIndex + 1);
+        childs = childs.splice(beginIndex, endIndex - beginIndex + 1);
       }
-      for (var i: number = 0, n: number = arr.length; i < n; i++) {
-          arr[i].parent = null;
+      for (let i: number = 0, n: number = childs.length; i < n; i++) {
+        childs[i].parent = null;
       }
     }
     return this;
@@ -204,7 +204,7 @@ export default class Container extends DisplayObject {
    * @returns 返回新节点
    */
   replaceChild(newChid: DisplayObject, oldChild: DisplayObject): DisplayObject|null {
-    var index: number = this.getChildIndex(oldChild)
+    const index: number = this.getChildIndex(oldChild)
     if (index > -1) {
       this._children.splice(index, 1, newChid)
       oldChild.parent = null
@@ -220,7 +220,7 @@ export default class Container extends DisplayObject {
    * @returns 是否包含
    */
   contains(child: DisplayObject): boolean {
-    var childTemp: DisplayObject|Container|null = child
+    let childTemp: DisplayObject|Container|null = child
     if (childTemp === this) return true
     while (childTemp) {
       if (childTemp.parent === this) return true

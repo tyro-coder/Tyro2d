@@ -1,7 +1,7 @@
 /**
 	 * Ease 类定义了缓动函数，以便实现 Tween 动画的缓动效果。
 	 */
-export class Ease {
+export default class Ease {
 	/**@private */
 	private static HALF_PI: number = Math.PI * 0.5;
 	/**@private */
@@ -151,7 +151,7 @@ export class Ease {
 	 */
 	static elasticIn(t: number, b: number, c: number, d: number, a: number = 0, p: number = 0): number {
 
-		var s: number;
+		let s: number;
 		if (t == 0) return b;
 		if ((t /= d) == 1) return b + c;
 		if (!p) p = d * .3;
@@ -175,7 +175,7 @@ export class Ease {
 	 */
 	static elasticInOut(t: number, b: number, c: number, d: number, a: number = 0, p: number = 0): number {
 
-		var s: number;
+		let s: number;
 		if (t == 0) return b;
 		if ((t /= d * 0.5) == 2) return b + c;
 		if (!p) p = d * (.3 * 1.5);
@@ -200,7 +200,7 @@ export class Ease {
 	 */
 	static elasticOut(t: number, b: number, c: number, d: number, a: number = 0, p: number = 0): number {
 
-		var s: number;
+		let s: number;
 		if (t == 0) return b;
 		if ((t /= d) == 1) return b + c;
 		if (!p) p = d * .3;

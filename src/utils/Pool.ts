@@ -44,10 +44,11 @@ export default class Pool {
   static getInstanceByClass<T>(sign: string, cls: new () => T): T {
     if (!Pool._poolDic[sign]) return new cls();
 
-    let pool = Pool._poolDic[sign];
+    const pool = Pool._poolDic[sign];
+    let rst: T
     if (pool.length) {
-      var rst = pool.pop();
-      rst[Pool.POOLSIGN] = false;
+      rst = pool.pop();
+      <any>rst[Pool.POOLSIGN] = false;
     } else {
       rst = new cls()
     }
