@@ -227,11 +227,11 @@ class Vector2d extends HashObject {
       cy = v.y;
     }
 
-    let x = this.x - cx;
-    let y = this.y - cy;
+    const x = this.x - cx;
+    const y = this.y - cy;
 
-    let c = Math.cos(angle);
-    let s = Math.sin(angle);
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
 
     return this._set(x*c - y*s + cx, x*s + y*c + cy);
   }
@@ -267,7 +267,7 @@ class Vector2d extends HashObject {
    * @returns 
    */
   distance(v: Vector2d): number {
-    let dx = this.x - v.x, dy = this.y - v.y;
+    const dx = this.x - v.x, dy = this.y - v.y;
     return Math.sqrt(dx * dx + dy * dy);
   }
 

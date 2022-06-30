@@ -76,8 +76,8 @@ export default class Matrix2d extends HashObject {
    * @returns 当前矩阵新的值
    */
   concat(mtx: Matrix2d): Matrix2d {
-    let a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
-    let ma = mtx.a, mb = mtx.b, mc = mtx.c, md = mtx.d,  mx = mtx.dx, my = mtx.dy;
+    const a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
+    const ma = mtx.a, mb = mtx.b, mc = mtx.c, md = mtx.d,  mx = mtx.dx, my = mtx.dy;
 
     this.a = a * ma + b * mc
     this.b = a * mb + b * md
@@ -94,8 +94,8 @@ export default class Matrix2d extends HashObject {
    * @returns 当前矩阵
    */
   rotate(angle: number): Matrix2d {
-    let sin = Math.sin(angle), cos = Math.cos(angle);
-    let a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
+    const sin = Math.sin(angle), cos = Math.cos(angle);
+    const a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
 
     this.a = a * cos - b * sin;
     this.b = a * sin + b * cos;
@@ -149,8 +149,8 @@ export default class Matrix2d extends HashObject {
    * @returns 当前矩阵
    */
   invert(): Matrix2d {
-    let a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
-    let i = a * d - b * c;
+    const a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx;
+    const i = a * d - b * c;
 
     this.a = d / i;
     this.b = -b / i;

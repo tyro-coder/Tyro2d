@@ -43,7 +43,8 @@ export default class Stage extends Container implements ITicker {
    * @returns 舞台的可视区域
    */
   updateViewport() {
-    let canvas = this.canvas, viewport: IViewPort
+    const canvas = this.canvas
+    let viewport: IViewPort
     if (canvas.parentNode) {
       viewport = this.viewport = Utils.getElementViewRect(canvas)
     }

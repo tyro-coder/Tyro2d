@@ -16,7 +16,7 @@ export default class Utils {
    * @returns DOM元素的可视区域，格式为 {x: 0, y: 0, width: 100, height: 100}
    */
   static getElementViewRect(ele: HTMLElement): IViewPort {
-    var bounds: any;
+    let bounds: any;
     try {
       bounds = ele.getBoundingClientRect()
     } catch (error) {

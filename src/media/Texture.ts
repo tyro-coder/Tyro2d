@@ -17,14 +17,13 @@ export default class Texture extends EventDispatcher {
 
   load(src: string): Promise<Texture> {
     return new Promise((resolve) => {
-      let _this = this
-      let img = this.image = new Image()
+      const img = this.image = new Image()
       img.crossOrigin = 'Anonymous'
-      img.onload = function() {
+      img.onload = () => {
         img.onload = null
-        _this.width = img.width
-        _this.height = img.height
-        resolve(_this)
+        this.width = img.width
+        this.height = img.height
+        resolve(this)
       }
       img.src = src
     })

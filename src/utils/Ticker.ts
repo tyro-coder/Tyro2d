@@ -11,7 +11,7 @@ export default class Ticker {
   private _tickCount: number = 0;
   private _tickTime: number = 0;
   private _measuredFPS: number = 0;
-  private _useRAF: Function | boolean;
+  private _useRAF: boolean;
 
   constructor(fps: number = 60) {
     this._targetFPS = fps
@@ -27,13 +27,13 @@ export default class Ticker {
     if (this._intervalId) return;
     this._lastTime = Browser.now;
 
-    var self = this,
+    const self = this,
       interval = this._interval,
       raf =
         window.requestAnimationFrame ||
         (<any>window)[Browser.jsVendor + "RequestAnimationFrame"];
 
-    var runLoop: Function;
+    let runLoop: () => void;
     if (useRAF && raf && interval < 17) {
       this._useRAF = true;
       runLoop = function () {
@@ -42,7 +42,7 @@ export default class Ticker {
       };
     } else {
       runLoop = function () {
-        self._intervalId = setTimeout(runLoop, interval);
+        self._intervalId = window.setTimeout(runLoop, interval);
         self._tick();
       };
     }
@@ -56,7 +56,7 @@ export default class Ticker {
    */
   stop() {
     if (this._useRAF) {
-      var cancelRAF =
+      const cancelRAF =
         window.cancelAnimationFrame ||
         (<any>window)[Browser.jsVendor + "CancelAnimationFrame"];
       cancelRAF(this._intervalId);
@@ -108,7 +108,7 @@ export default class Ticker {
    * @param tickObj 定时器对象
    */
   removeTick(tickObj: ITicker) {
-    var tickers = this._tickers,
+    const tickers = this._tickers,
       index = tickers.indexOf(tickObj);
     if (index >= 0) {
       tickers.splice(index, 1);
@@ -120,9 +120,9 @@ export default class Ticker {
    * @param callback 回调方法
    * @returns
    */
-  nextTick(callback: Function) {
-    var that = this;
-    var tickObj: ITicker = {
+  nextTick(callback: () => void) {
+    const that = this;
+    const tickObj: ITicker = {
       tick: function (dt: number) {
         that.removeTick(tickObj);
         callback && callback();
@@ -137,7 +137,7 @@ export default class Ticker {
    * 清空所有定时器
    */
   clear() {
-    var tickers = this._tickers
+    const tickers = this._tickers
     tickers.length = 0
   }
 
@@ -146,13 +146,13 @@ export default class Ticker {
    * @param callback 回调方法
    * @param duration 延迟时间
    */
-  timeout(callback: Function, duration: number): ITicker {
-    var that = this;
-    var targetTime = Browser.now + duration;
-    var tickObj: ITicker = {
+  timeout(callback: () => void, duration: number): ITicker {
+    const that = this;
+    const targetTime = Browser.now + duration;
+    const tickObj: ITicker = {
       tick: function () {
-        var nowTime = Browser.now;
-        var dt = nowTime - targetTime;
+        const nowTime = Browser.now;
+        const dt = nowTime - targetTime;
         if (dt >= 0) {
           that.removeTick(tickObj);
           callback();
@@ -169,13 +169,13 @@ export default class Ticker {
    * @param duration 延时
    * @returns 
    */
-  interval(callback: Function, duration: number): ITicker {
-    var that = this;
-    var targetTime = Browser.now + duration;
-    var tickObj: ITicker = {
+  interval(callback: () => void, duration: number): ITicker {
+    const that = this;
+    let targetTime = Browser.now + duration;
+    const tickObj: ITicker = {
       tick: function () {
-        var nowTime = Browser.now;
-        var dt = nowTime - targetTime;
+        let nowTime = Browser.now;
+        const dt = nowTime - targetTime;
         if (dt >= 0) {
           if (dt < duration) {
             nowTime -= dt;
@@ -191,7 +191,7 @@ export default class Ticker {
 
   private _tick() {
     if (this._paused) return;
-    var startTime = Browser.now,
+    const startTime = Browser.now,
       deltaTime = startTime - this._lastTime,
       tickers = this._tickers;
 
@@ -206,8 +206,8 @@ export default class Ticker {
     }
     this._lastTime = startTime;
 
-    var tickersCopy = tickers.slice(0);
-    for (var i = 0, len = tickersCopy.length; i < len; i++) {
+    const tickersCopy = tickers.slice(0);
+    for (let i = 0, len = tickersCopy.length; i < len; i++) {
       tickersCopy[i].tick(deltaTime);
     }
   }

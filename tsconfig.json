@@ -6,7 +6,7 @@
       "composite":true,
       "stripInternal": true,
       "removeComments": false,
-      "preserveConstEnums": false,
+      "preserveConstEnums": true,
       "noImplicitAny": true,
       "noImplicitThis": true,
       "strictFunctionTypes": true,
