@@ -1,7 +1,8 @@
 import Browser from "./Browser";
+import { ITicker } from "./Constants";
 
 export default class Ticker {
-  private _paused: boolean = false;
+  private _paused: boolean = true;
   private _targetFPS: number = 0;
   private _interval: number = 0;
   private _intervalId: number = null;
@@ -12,9 +13,9 @@ export default class Ticker {
   private _measuredFPS: number = 0;
   private _useRAF: Function | boolean;
 
-  constructor(fps: number) {
-    this._targetFPS = fps || 60;
-    this._interval = 1000 / this._targetFPS;
+  constructor(fps: number = 60) {
+    this._targetFPS = fps
+    this._interval = 1000 / this._targetFPS
   }
 
   /**
@@ -133,6 +134,14 @@ export default class Ticker {
   }
 
   /**
+   * 清空所有定时器
+   */
+  clear() {
+    var tickers = this._tickers
+    tickers.length = 0
+  }
+
+  /**
    * 延迟指定的时间后调用回调，类似 setTimeout
    * @param callback 回调方法
    * @param duration 延迟时间
@@ -202,11 +211,4 @@ export default class Ticker {
       tickersCopy[i].tick(deltaTime);
     }
   }
-}
-
-/**
- * 定时器对象
- */
-export interface ITicker {
-  tick: (dt: number) => void;
 }

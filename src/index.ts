@@ -9,22 +9,46 @@ import Container from './display/Container'
 import Stage from './display/Stage'
 import Sprite from './display/Sprite'
 
-import Timer from './utils/Timer'
+import Ticker from './utils/Ticker'
 
-export const tyro2d = {
-  // math
-  math,
-  Vector2d,
+export default class Tyro2d {
+  static math = math
+  static Vector2d = Vector2d
+  static Event = Event
+  static Stage = Stage
+  static Sprite = Sprite
+  static Container = Container
+  
+  static eventBus: EventDispatcher = new EventDispatcher() 
+  static ticker: Ticker = null
+  static stage: Stage = null
 
-  // 事件
-  Event,
-  EventDispatcher,
+  static start(stage: Stage, fps: number) {
+    Tyro2d.stage = stage
 
-  // display 节点
-  Stage,
-  Sprite,
-  Container,
+    Tyro2d.ticker = new Ticker(fps)
+    Tyro2d.ticker.addTick(stage)
+  }
 
-  // utils
-  Timer,
+  static pause() {
+    Tyro2d.ticker.pause()
+  }
+
+  static resume() {
+    Tyro2d.ticker.resume()
+  }
+
+  static stop() {
+    Tyro2d.ticker.stop()
+  }
+
+  static destroy() {
+    Tyro2d.stage.destroy()
+    Tyro2d.eventBus.destroy()
+    Tyro2d.ticker.stop()
+    Tyro2d.ticker.clear()
+
+    Tyro2d.stage = null
+    Tyro2d.ticker = null
+  }
 }

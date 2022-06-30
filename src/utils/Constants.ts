@@ -9,3 +9,10 @@ export interface IViewPort {
   width: number
   height: number
 }
+
+/**
+ * 定时器对象
+ */
+ export interface ITicker {
+  tick: (dt: number) => void;
+}

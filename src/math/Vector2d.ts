@@ -3,7 +3,8 @@ import Pool from '../utils/Pool';
 import { clamp } from './math';
 
 class Vector2d extends HashObject {
-  destory(): void {}
+  destroy(): void {
+  }
 
   static EMPTY: Vector2d = new Vector2d();
 
