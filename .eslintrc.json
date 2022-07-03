@@ -12,6 +12,7 @@
   "rules": {
     "@typescript-eslint/no-inferrable-types": 0,
     "@typescript-eslint/no-empty-function": 0,
-    "@typescript-eslint/no-this-alias": 0
+    "@typescript-eslint/no-this-alias": 0,
+    "@typescript-eslint/no-namespace": 0
   }
 }

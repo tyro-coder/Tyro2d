@@ -2,6 +2,7 @@ interface IPoolDic {
   [key: string]: any[]
 }
 
+
 export default class Pool {
   private static POOLSIGN: string = "__isInPool";
   private static _poolDic: IPoolDic = {};
@@ -48,7 +49,7 @@ export default class Pool {
     let rst: T
     if (pool.length) {
       rst = pool.pop();
-      <any>rst[Pool.POOLSIGN] = false;
+      (rst as any)[Pool.POOLSIGN] = false;
     } else {
       rst = new cls()
     }

@@ -1,7 +1,6 @@
 import Renderer from "./Renderer";
-import DisplayObject from "../display/DisplayObject";
-import Sprite from "../display/Sprite";
-import Stage from "../display/Stage";
+
+import { DisplayObject, Stage } from '../index'
 
 export default class CanvasRenderer extends Renderer {
   renderType: string = 'canvas'
@@ -45,14 +44,14 @@ export default class CanvasRenderer extends Renderer {
       }
     }
 
-    if (target instanceof Sprite) {
-      const texture = target.texture
-      const img = texture.image, imgW = texture.width, imgH = texture.height
+    // if (target instanceof Sprite) {
+    //   const texture = target.texture
+    //   const img = texture.image, imgW = texture.width, imgH = texture.height
 
-      if (!img || !imgW || !imgH) return
+    //   if (!img || !imgW || !imgH) return
 
-      ctx.drawImage(img, target.x, target.y, imgW, imgH)
-    }
+    //   ctx.drawImage(img, target.x, target.y, imgW, imgH)
+    // }
   }
 
   endDraw(target: DisplayObject): void {

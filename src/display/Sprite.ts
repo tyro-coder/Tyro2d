@@ -5,4 +5,5 @@ export default class Sprite extends DisplayObject {
   public texture: Texture
 
   protected _instanceType: string = 'Sprite'
+
 }

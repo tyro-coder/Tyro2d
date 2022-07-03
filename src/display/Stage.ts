@@ -1,8 +1,7 @@
 import CanvasRenderer from "../renderer/CanvasRenderer";
 import Renderer from "../renderer/Renderer";
 import { ITicker, IViewPort, RENDER_TYPE } from "../utils/Constants";
-import Utils from "../utils/Utils";
-import Container from "./Container";
+import { Container, Utils } from '../index'
 
 export default class Stage extends Container implements ITicker {
   public canvas: HTMLCanvasElement
