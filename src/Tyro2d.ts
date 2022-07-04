@@ -1,4 +1,6 @@
-import { EventDispatcher, Stage, Ticker } from "./index"
+import EventDispatcher from './event/EventDispatcher'
+import Stage from './display/Stage'
+import Ticker from './utils/Ticker'
 
 export default class Tyro2d {
   static Event = Event
@@ -12,6 +14,8 @@ export default class Tyro2d {
     Tyro2d.stage = stage
     Tyro2d.ticker = new Ticker(fps)
     Tyro2d.ticker.addTick(stage)
+
+    Tyro2d.ticker.start()
   }
 
   static pause() {

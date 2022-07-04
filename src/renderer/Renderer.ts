@@ -1,12 +1,13 @@
+import { RENDER_TYPE } from './../utils/Constants';
 import Stage from "../display/Stage";
 import HashObject from "../utils/HashObject";
-import DisplayObject from "../display/DisplayObject";
+import Node from "../display/Node";
 
 export default abstract class Renderer extends HashObject {
   canvas: HTMLCanvasElement
   stage: Stage
   blendMode: GlobalCompositeOperation = 'source-over'
-  renderType: string = 'none'
+  renderType: RENDER_TYPE
   context: any
 
   protected _instanceType: string = 'Renderer'
@@ -15,19 +16,17 @@ export default abstract class Renderer extends HashObject {
     super()
   }
 
-  abstract startDraw(target: DisplayObject): boolean
+  abstract startDraw(target: Node): boolean
 
-  abstract draw(target: DisplayObject): void
+  abstract endDraw(target: Node): void
 
-  abstract endDraw(target: DisplayObject): void
-
-  abstract transform(target: DisplayObject): void
+  abstract transform(target: Node): void
 
   abstract resize(width: number, height: number): void
 
   abstract clear(x: number, y: number, width: number, height: number): void
 
-  abstract remove(target: DisplayObject): void
+  abstract remove(target: Node): void
 
   destroy(): void {
     

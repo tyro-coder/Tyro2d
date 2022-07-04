@@ -7,8 +7,7 @@ import Event from './event/Event'
 import EventDispatcher from './event/EventDispatcher'
 
 /** Display */
-import DisplayObject from './display/DisplayObject'
-import Container from './display/Container'
+import Node from './display/Node'
 import Stage from './display/Stage'
 
 /** Utils */
@@ -26,12 +25,9 @@ export {
   Event,
   EventDispatcher,
 
-  DisplayObject,
-  Container,
+  Node,
   Stage,
 
   Ticker,
   Utils,
 }
-
-console.log('Tyro2d 12')

@@ -679,144 +679,27 @@ class EventHandler extends Handler {
 /**@private EventHandler 对象池 */
 EventHandler._pool = [];
 
-class Renderer extends HashObject {
-    constructor() {
-        super();
-        this.blendMode = 'source-over';
-        this.renderType = 'none';
-        this._instanceType = 'Renderer';
-    }
-    destroy() {
-    }
-}
-
-class CanvasRenderer extends Renderer {
-    constructor() {
-        super();
-        this.renderType = 'canvas';
-        this._instanceType = 'CanvasRenderer';
-        this.context = this.canvas.getContext('2d');
-    }
-    startDraw(target) {
-        if (target.visible && target.opacity > 0) {
-            if (target === this.stage) {
-                this.clear(0, 0, target.width, target.height);
-            }
-            if (target.blendMode !== this.blendMode) {
-                this.context.globalCompositeOperation = this.blendMode = target.blendMode;
-            }
-            this.context.save();
-            this.context.fillStyle;
-            return true;
-        }
-        return false;
-    }
-    draw(target) {
-        const ctx = this.context, w = target.width, h = target.height;
-        // 绘制舞台背景颜色
-        if (target instanceof Stage) {
-            const bg = target.background;
-            if (bg) {
-                ctx.fillStyle = bg;
-                ctx.fillRect(0, 0, w, h);
-            }
-        }
-        // if (target instanceof Sprite) {
-        //   const texture = target.texture
-        //   const img = texture.image, imgW = texture.width, imgH = texture.height
-        //   if (!img || !imgW || !imgH) return
-        //   ctx.drawImage(img, target.x, target.y, imgW, imgH)
-        // }
-    }
-    endDraw(target) {
-        this.context.restore();
-    }
-    transform(target) {
-    }
-    remove(target) {
-    }
-    clear(x, y, width, height) {
-        this.context.clearRect(x, y, width, height);
-    }
-    resize(width, height) {
-    }
-}
-
 var RENDER_TYPE;
 (function (RENDER_TYPE) {
     RENDER_TYPE[RENDER_TYPE["CANVAS"] = 0] = "CANVAS";
     RENDER_TYPE[RENDER_TYPE["WEBGL"] = 1] = "WEBGL";
 })(RENDER_TYPE || (RENDER_TYPE = {}));
 
-class Stage extends Container {
-    constructor(canvas, designWidth, designHeight, viewWidth = document.body.clientWidth, viewHeight = document.body.clientHeight, renderType = RENDER_TYPE.CANVAS) {
-        super();
-        this.paused = false;
-        this.background = '';
-        this._instanceType = 'Stage';
-        this._initRenderer(canvas, renderType);
-        this.updateViewport();
-    }
-    /**
-     * 判断目标对象是否是 Stage
-     * @param val 对象
-     * @returns
-     */
-    static isStage(val) {
-        return val instanceof Stage;
-    }
-    /**
-     * 更新舞台在页面中的可视区域，即渲染区域。当 Canvas 的样式border|margin|padding等属性更改后，需要调用此方法更新舞台渲染区域
-     * @returns 舞台的可视区域
-     */
-    updateViewport() {
-        const canvas = this.canvas;
-        let viewport;
-        if (canvas.parentNode) {
-            viewport = this.viewport = Utils.getElementViewRect(canvas);
-        }
-        return viewport;
-    }
-    /**
-     * 改变舞台的大小
-     * @param width 指定舞台新的宽度
-     * @param height 指定舞台新的高度
-     * @param forceResize 是否强制改变舞台大小，即不管舞台大小是否相同，强制改变，可确保舞台，画布及视窗之间的尺寸同步
-     */
-    resize(width, height, forceResize = false) {
-        if (forceResize || this.width !== width || this.height !== height) {
-            this.width = width;
-            this.height = height;
-            this.renderer.resize(width, height);
-            this.updateViewport();
-        }
-    }
-    /**
-     *
-     * @param dt 游戏循环中使用，触发舞台的更新与渲染，外部不要调用
-     */
-    tick(dt) {
-        if (this.paused)
-            return;
-        this._render(this.renderer, dt);
-    }
-    _initRenderer(canvas, renderType) {
-        if (renderType === RENDER_TYPE.CANVAS) {
-            this.renderer = new CanvasRenderer();
-        }
-    }
-}
-
-class DisplayObject extends EventDispatcher {
+/**
+ * Node 节点，所有游戏内元素的基类
+ */
+class Node extends EventDispatcher {
     constructor() {
         super();
-        /** 可视对象是否可见，默认为true */
+        /** 节点是否可见，默认为true */
         this.visible = true;
-        /** 可视对象是否可接受交互事件 */
+        /** 节点是否可接受交互事件 */
         this.mouseEnable = true;
-        /** 可视对象的渲染方式 */
+        /** 是否裁剪超出容器范围的子元素，默认 false */
+        this.clipChildren = false;
+        /** 节点的渲染方式 */
         this.blendMode = 'source-over';
-        this._instanceType = 'DisplayObject';
+        this._instanceType = 'Node';
         this._width = 0;
         this._height = 0;
         this._x = 0;
@@ -824,13 +707,8 @@ class DisplayObject extends EventDispatcher {
         this._opacity = 1;
         this._destroyed = false;
         this._parent = null;
-    }
-    get stage() {
-        let obj = this.parent;
-        while (obj || !Stage.isStage(obj)) {
-            obj = obj.parent;
-        }
-        return obj;
+        /**@internal 子对象集合 */
+        this._children = Node.ARRAY_EMPTY;
     }
     get opacity() {
         return this._opacity;
@@ -888,8 +766,11 @@ class DisplayObject extends EventDispatcher {
             this._parent = p;
         }
     }
-    render(renderer, delta) {
-        renderer.draw(this);
+    get children() {
+        return this._children;
+    }
+    get childrenNum() {
+        return this._children.length;
     }
     destroy() {
     }
@@ -900,29 +781,6 @@ class DisplayObject extends EventDispatcher {
      */
     onUpdate(delta) {
         return true;
-    }
-    _render(renderer, delta) {
-        if ((!this.onUpdate || this.onUpdate(delta) !== false) && renderer.startDraw(this)) {
-            renderer.transform(this);
-            this.render(renderer, delta);
-            renderer.endDraw(this);
-        }
-    }
-}
-
-class Container extends DisplayObject {
-    constructor() {
-        super();
-        /** 是否裁剪超出容器范围的子元素，默认 false */
-        this.clipChildren = false;
-        /**@internal 子对象集合 */
-        this._children = Container.ARRAY_EMPTY;
-    }
-    get children() {
-        return this._children;
-    }
-    get childrenNum() {
-        return this._children.length;
     }
     /**
      * 添加子节点
@@ -942,7 +800,7 @@ class Container extends DisplayObject {
         }
         else {
             child.parent && child.parent.removeChild(child);
-            this._children === Container.ARRAY_EMPTY && (this._children = []);
+            this._children === Node.ARRAY_EMPTY && (this._children = []);
             this._children.push(child);
             child.parent = this;
             this._childChanged();
@@ -967,7 +825,7 @@ class Container extends DisplayObject {
             }
             else {
                 child.parent && child.parent.removeChild(child);
-                this._children === Container.ARRAY_EMPTY && (this._children = []);
+                this._children === Node.ARRAY_EMPTY && (this._children = []);
                 this._children.splice(index, 0, child);
                 child.parent = this;
             }
@@ -1085,7 +943,7 @@ class Container extends DisplayObject {
         if (this._children && this._children.length > 0) {
             let childs = this._children;
             if (beginIndex === 0 && endIndex >= childs.length - 1) {
-                this._children = Container.ARRAY_EMPTY;
+                this._children = Node.ARRAY_EMPTY;
             }
             else {
                 childs = childs.splice(beginIndex, endIndex - beginIndex + 1);
@@ -1128,15 +986,52 @@ class Container extends DisplayObject {
         }
         return false;
     }
+    _render(renderer, delta) {
+        this._setRenderMethod(renderer);
+        if ((!this.onUpdate || this.onUpdate(delta) !== false) && renderer.startDraw(this)) {
+            renderer.transform(this);
+            this.render(renderer, delta);
+            renderer.endDraw(this);
+        }
+    }
+    /**
+     * 使用 Canvas 进行渲染
+     * @param renderer 渲染器
+     * @param delta 帧间隔时间
+     */
+    _renderCanvas(renderer, delta) {
+        renderer.clear(this.x, this.y, this.width, this.height);
+        const children = this.children;
+        for (let i = 0, n = children.length; i < n; i++) {
+            const child = children[i];
+            child._render(renderer, delta);
+        }
+    }
+    /**
+     * 使用 WebGL 进行渲染
+     * @param renderer 渲染器
+     * @param delta 帧间隔时间
+     */
+    _renderWebGL(renderer, delta) {
+    }
     /**
      * 子节点发生改变
      * @param child 子节点
      */
     _childChanged(child = null) {
     }
+    /**
+     * 根据渲染器类型，设置本节点的渲染方法
+     * @param renderer 渲染器
+     */
+    _setRenderMethod(renderer) {
+        if (!this.render) {
+            this.render = renderer.renderType === RENDER_TYPE.WEBGL ? this._renderWebGL : this._renderCanvas;
+        }
+    }
 }
 /**@private */
-Container.ARRAY_EMPTY = [];
+Node.ARRAY_EMPTY = [];
 
 class Browser {
     /**
@@ -1245,6 +1140,181 @@ Browser._initd = false;
 Browser._pixelRatio = -1;
 Browser._isIos = false;
 Browser._isAndroid = false;
+
+class Utils {
+    /**获取一个全局唯一ID。*/
+    static getGID() {
+        return Utils._gid++;
+    }
+    /**
+     * 获取DOM元素在页面中的内容显示区域
+     * @param ele DOM元素
+     * @returns DOM元素的可视区域，格式为 {x: 0, y: 0, width: 100, height: 100}
+     */
+    static getElementViewRect(ele) {
+        let bounds;
+        try {
+            bounds = ele.getBoundingClientRect();
+        }
+        catch (error) {
+            bounds = {
+                top: ele.offsetTop,
+                left: ele.offsetLeft,
+                right: ele.offsetLeft + ele.offsetWidth,
+                bottom: ele.offsetTop + ele.offsetHeight,
+            };
+        }
+        const offsetX = ((Browser.win.pageXOffset || Browser.docElem.scrollLeft) - (Browser.docElem.clientLeft || 0)) || 0;
+        const offsetY = ((Browser.win.pageYOffset || Browser.docElem.scrollTop) - (Browser.docElem.clientTop || 0)) || 0;
+        const styles = Browser.win.getComputedStyle ? getComputedStyle(ele) : ele.style;
+        const parseIntFn = Browser.win.parseInt;
+        const padLeft = (parseIntFn(styles.paddingLeft) + parseIntFn(styles.borderLeftWidth)) || 0;
+        const padTop = (parseIntFn(styles.paddingTop) + parseIntFn(styles.borderTopWidth)) || 0;
+        const padRight = (parseIntFn(styles.paddingRight) + parseIntFn(styles.borderRightWidth)) || 0;
+        const padBottom = (parseIntFn(styles.paddingBottom) + parseIntFn(styles.borderBottomWidth)) || 0;
+        const top = bounds.top || 0;
+        const left = bounds.left || 0;
+        const right = bounds.right || 0;
+        const bottom = bounds.bottom || 0;
+        return {
+            x: left + offsetX + padLeft,
+            y: top + offsetY + padTop,
+            width: right - padRight - left - padLeft,
+            height: bottom - padBottom - top - padTop,
+        };
+    }
+}
+/**@private */
+Utils._gid = 1;
+
+class Renderer extends HashObject {
+    constructor() {
+        super();
+        this.blendMode = 'source-over';
+        this._instanceType = 'Renderer';
+    }
+    destroy() {
+    }
+}
+
+class CanvasRenderer extends Renderer {
+    constructor(canvas) {
+        super();
+        this.renderType = RENDER_TYPE.CANVAS;
+        this._instanceType = 'CanvasRenderer';
+        this.canvas = canvas;
+        this.context = this.canvas.getContext('2d');
+    }
+    startDraw(target) {
+        if (target.visible && target.opacity > 0) {
+            if (target.blendMode !== this.blendMode) {
+                this.context.globalCompositeOperation = this.blendMode = target.blendMode;
+            }
+            this.context.save();
+            return true;
+        }
+        return false;
+    }
+    draw(target) {
+        // const ctx = this.context,
+        //   w = target.width,
+        //   h = target.height
+        // // 绘制舞台背景颜色
+        // if (target instanceof Stage) {
+        //   const bg = target.background
+        //   if (bg) {
+        //     ctx.fillStyle = bg
+        //     ctx.fillRect(0, 0, w, h)
+        //   }
+        // }
+        // // if (target instanceof Sprite) {
+        // //   const texture = target.texture
+        // //   const img = texture.image, imgW = texture.width, imgH = texture.height
+        // //   if (!img || !imgW || !imgH) return
+        // //   ctx.drawImage(img, target.x, target.y, imgW, imgH)
+        // // }
+    }
+    endDraw(target) {
+        this.context.restore();
+    }
+    transform(target) {
+    }
+    remove(target) {
+    }
+    clear(x, y, width, height) {
+        this.context.clearRect(x, y, width, height);
+    }
+    resize(width, height) {
+    }
+}
+
+class Stage extends Node {
+    constructor(canvas, designWidth, designHeight, viewWidth = document.body.clientWidth, viewHeight = document.body.clientHeight, renderType = RENDER_TYPE.CANVAS) {
+        super();
+        this.paused = false;
+        this.background = '';
+        this._instanceType = 'Stage';
+        console.log(viewWidth, viewHeight);
+        this._initCanvas(canvas, designWidth, designHeight);
+        this._initRenderer(canvas, renderType);
+        this.updateViewport();
+    }
+    /**
+     * 判断目标对象是否是 Stage
+     * @param val 对象
+     * @returns
+     */
+    static isStage(val) {
+        return val instanceof Stage;
+    }
+    /**
+     * 更新舞台在页面中的可视区域，即渲染区域。当 Canvas 的样式border|margin|padding等属性更改后，需要调用此方法更新舞台渲染区域
+     * @returns 舞台的可视区域
+     */
+    updateViewport() {
+        const canvas = this.canvas;
+        let viewport;
+        if (canvas.parentNode) {
+            viewport = this.viewport = Utils.getElementViewRect(canvas);
+        }
+        return viewport;
+    }
+    /**
+     * 改变舞台的大小
+     * @param width 指定舞台新的宽度
+     * @param height 指定舞台新的高度
+     * @param forceResize 是否强制改变舞台大小，即不管舞台大小是否相同，强制改变，可确保舞台，画布及视窗之间的尺寸同步
+     */
+    resize(width, height, forceResize = false) {
+        if (forceResize || this.width !== width || this.height !== height) {
+            this.width = width;
+            this.height = height;
+            this.renderer.resize(width, height);
+            this.updateViewport();
+        }
+    }
+    /**
+     *
+     * @param dt 游戏循环中使用，触发舞台的更新与渲染，外部不要调用
+     */
+    tick(dt) {
+        if (this.paused)
+            return;
+        this._render(this.renderer, dt);
+    }
+    _initCanvas(canvas, designWidth, designHeight) {
+        this.canvas = canvas;
+        this.width = designWidth;
+        this.height = designHeight;
+        canvas.width = designWidth;
+        canvas.height = designHeight;
+    }
+    _initRenderer(canvas, renderType) {
+        if (renderType === RENDER_TYPE.CANVAS) {
+            this.renderer = new CanvasRenderer(canvas);
+        }
+    }
+}
 
 class Ticker {
     constructor(fps = 60) {
@@ -1433,52 +1503,6 @@ class Ticker {
     }
 }
 
-class Utils {
-    /**获取一个全局唯一ID。*/
-    static getGID() {
-        return Utils._gid++;
-    }
-    /**
-     * 获取DOM元素在页面中的内容显示区域
-     * @param ele DOM元素
-     * @returns DOM元素的可视区域，格式为 {x: 0, y: 0, width: 100, height: 100}
-     */
-    static getElementViewRect(ele) {
-        let bounds;
-        try {
-            bounds = ele.getBoundingClientRect();
-        }
-        catch (error) {
-            bounds = {
-                top: ele.offsetTop,
-                left: ele.offsetLeft,
-                right: ele.offsetLeft + ele.offsetWidth,
-                bottom: ele.offsetTop + ele.offsetHeight,
-            };
-        }
-        const offsetX = ((Browser.win.pageXOffset || Browser.docElem.scrollLeft) - (Browser.docElem.clientLeft || 0)) || 0;
-        const offsetY = ((Browser.win.pageYOffset || Browser.docElem.scrollTop) - (Browser.docElem.clientTop || 0)) || 0;
-        const styles = Browser.win.getComputedStyle ? getComputedStyle(ele) : ele.style;
-        const parseIntFn = Browser.win.parseInt;
-        const padLeft = (parseIntFn(styles.paddingLeft) + parseIntFn(styles.borderLeftWidth)) || 0;
-        const padTop = (parseIntFn(styles.paddingTop) + parseIntFn(styles.borderTopWidth)) || 0;
-        const padRight = (parseIntFn(styles.paddingRight) + parseIntFn(styles.borderRightWidth)) || 0;
-        const padBottom = (parseIntFn(styles.paddingBottom) + parseIntFn(styles.borderBottomWidth)) || 0;
-        const top = bounds.top || 0;
-        const left = bounds.left || 0;
-        const right = bounds.right || 0;
-        const bottom = bounds.bottom || 0;
-        return {
-            x: left + offsetX + padLeft,
-            y: top + offsetY + padTop,
-            width: right - padRight - left - padLeft,
-            height: bottom - padBottom - top - padTop,
-        };
-    }
-}
-/**@private */
-Utils._gid = 1;
-
 class Tyro2d {
     static start(stage, fps) {
         if (Tyro2d.stage)
@@ -1486,6 +1510,7 @@ class Tyro2d {
         Tyro2d.stage = stage;
         Tyro2d.ticker = new Ticker(fps);
         Tyro2d.ticker.addTick(stage);
+        Tyro2d.ticker.start();
     }
     static pause() {
         Tyro2d.ticker.pause();
@@ -1507,7 +1532,4 @@ class Tyro2d {
 }
 Tyro2d.Event = Event;
 
-/** Math */
-console.log('Tyro2d 12');
-
-export { Container, DisplayObject, Event$1 as Event, EventDispatcher, MathTool, Stage, Ticker, Tyro2d, Utils, Vector2d };
+export { Event$1 as Event, EventDispatcher, MathTool, Node, Stage, Ticker, Tyro2d, Utils, Vector2d };

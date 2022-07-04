@@ -1,11 +1,12 @@
-import CanvasRenderer from "../renderer/CanvasRenderer";
 import Renderer from "../renderer/Renderer";
-import { ITicker, IViewPort, RENDER_TYPE } from "../utils/Constants";
-import { Container, Utils } from '../index'
+import Utils from '../utils/Utils';
+import Node from "./Node";
+import { ITickerHandler, IViewPort, RENDER_TYPE } from "../utils/Constants";
+import CanvasRenderer from "../renderer/CanvasRenderer";
 
-export default class Stage extends Container implements ITicker {
+export default class Stage extends Node implements ITickerHandler {
   public canvas: HTMLCanvasElement
-  public renderer: Renderer
+  public renderer: Renderer|CanvasRenderer
   public paused: boolean = false
   public viewport: IViewPort
   public background: string | CanvasGradient | CanvasPattern = ''
@@ -22,6 +23,9 @@ export default class Stage extends Container implements ITicker {
   ) {
     super()
 
+    console.log(viewWidth, viewHeight)
+
+    this._initCanvas(canvas, designWidth, designHeight)
     this._initRenderer(canvas, renderType)
     this.updateViewport()
   }
@@ -31,7 +35,7 @@ export default class Stage extends Container implements ITicker {
    * @param val 对象
    * @returns 
    */
-  static isStage(val: any) {
+  static isStage(val: Node) {
     return val instanceof Stage
   }
 
@@ -69,12 +73,20 @@ export default class Stage extends Container implements ITicker {
    */
   tick(dt: number) {
     if (this.paused) return
-    this._render(this.renderer, dt)
+    this._render(<Renderer>this.renderer, dt)
+  }
+
+  private _initCanvas(canvas: HTMLCanvasElement, designWidth: number, designHeight: number) {
+    this.canvas = canvas
+    this.width = designWidth
+    this.height = designHeight
+    canvas.width = designWidth
+    canvas.height = designHeight
   }
 
   private _initRenderer(canvas: HTMLCanvasElement, renderType: RENDER_TYPE) {
     if (renderType === RENDER_TYPE.CANVAS) {
-      this.renderer = new CanvasRenderer()
+      this.renderer = new CanvasRenderer(canvas)
     }
   }
 }

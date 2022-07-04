@@ -1,12 +1,12 @@
 import Browser from "./Browser";
-import { ITicker } from "./Constants";
+import { ITickerHandler } from "./Constants";
 
 export default class Ticker {
   private _paused: boolean = true;
   private _targetFPS: number = 0;
   private _interval: number = 0;
   private _intervalId: number = null;
-  private _tickers: ITicker[] = [];
+  private _tickers: ITickerHandler[] = [];
   private _lastTime: number = 0;
   private _tickCount: number = 0;
   private _tickTime: number = 0;
@@ -94,7 +94,7 @@ export default class Ticker {
    * 添加定时器对象
    * @param tickObj 定时器对象
    */
-  addTick(tickObj: ITicker) {
+  addTick(tickObj: ITickerHandler) {
     if (!tickObj || typeof tickObj.tick != "function") {
       throw new Error(
         "Ticker: The tick object must implement the tick method."
@@ -107,7 +107,7 @@ export default class Ticker {
    * 移除定时器对象
    * @param tickObj 定时器对象
    */
-  removeTick(tickObj: ITicker) {
+  removeTick(tickObj: ITickerHandler) {
     const tickers = this._tickers,
       index = tickers.indexOf(tickObj);
     if (index >= 0) {
@@ -122,7 +122,7 @@ export default class Ticker {
    */
   nextTick(callback: () => void) {
     const that = this;
-    const tickObj: ITicker = {
+    const tickObj: ITickerHandler = {
       tick: function (dt: number) {
         that.removeTick(tickObj);
         callback && callback();
@@ -146,10 +146,10 @@ export default class Ticker {
    * @param callback 回调方法
    * @param duration 延迟时间
    */
-  timeout(callback: () => void, duration: number): ITicker {
+  timeout(callback: () => void, duration: number): ITickerHandler {
     const that = this;
     const targetTime = Browser.now + duration;
-    const tickObj: ITicker = {
+    const tickObj: ITickerHandler = {
       tick: function () {
         const nowTime = Browser.now;
         const dt = nowTime - targetTime;
@@ -169,10 +169,10 @@ export default class Ticker {
    * @param duration 延时
    * @returns 
    */
-  interval(callback: () => void, duration: number): ITicker {
+  interval(callback: () => void, duration: number): ITickerHandler {
     const that = this;
     let targetTime = Browser.now + duration;
-    const tickObj: ITicker = {
+    const tickObj: ITickerHandler = {
       tick: function () {
         let nowTime = Browser.now;
         const dt = nowTime - targetTime;
