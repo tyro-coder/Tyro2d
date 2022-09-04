@@ -679,6 +679,238 @@ class EventHandler extends Handler {
 /**@private EventHandler 对象池 */
 EventHandler._pool = [];
 
+/**
+ * 2d矩阵类
+ *  a c dx
+ * [b d dy]
+ *  0 0 1
+ */
+class Matrix2d extends HashObject {
+    constructor(a = 1, b = 0, c = 0, d = 1, dx = 0, dy = 0) {
+        super();
+        this._instanceType = 'Matrix2d';
+        this.set(a, b, c, d, dx, dy);
+    }
+    /**
+     * 设置当前矩阵的值
+     * @param a
+     * @param b
+     * @param c
+     * @param d
+     * @param dx
+     * @param dy
+     * @returns
+     */
+    set(a = 1, b = 0, c = 0, d = 1, dx = 0, dy = 0) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        this.d = d;
+        this.dx = dx;
+        this.dy = dy;
+        return this;
+    }
+    /**
+     * 复制目标矩阵的值
+     * @param m 模板矩阵
+     * @returns 当前矩阵
+     */
+    copy(m) {
+        this.a = m.a;
+        this.b = m.b;
+        this.c = m.c;
+        this.d = m.d;
+        this.dx = m.dx;
+        this.dy = m.dy;
+        return this;
+    }
+    /**
+     * 复制当前矩阵并返回一个新的矩阵对象
+     * @returns 新的矩阵
+     */
+    clone() {
+        return new Matrix2d().copy(this);
+    }
+    /**
+     * 将某个矩阵与当前矩阵连接
+     * @param mtx 目标矩阵
+     * @returns 当前矩阵新的值
+     */
+    concat(mtx) {
+        const a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
+        const ma = mtx.a, mb = mtx.b, mc = mtx.c, md = mtx.d, mx = mtx.dx, my = mtx.dy;
+        this.a = a * ma + b * mc;
+        this.b = a * mb + b * md;
+        this.c = c * ma + d * mc;
+        this.d = c * mb + d * md;
+        this.dx = dx * ma + dy * mc + mx;
+        this.dy = dx * mb + dy * md + my;
+        return this;
+    }
+    /**
+     * 将当前矩阵进行旋转
+     * @param angle 旋转的角度
+     * @returns 当前矩阵
+     */
+    rotate(angle) {
+        const red = MathTool.degToRed(angle);
+        const sin = Math.sin(red), cos = Math.cos(red);
+        const a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
+        this.a = a * cos + c * sin;
+        this.b = b * cos + d * sin;
+        this.c = c * cos - a * sin;
+        this.d = d * cos - b * sin;
+        this.dx = dx * cos - dy * sin;
+        this.dy = dx * sin + dy * cos;
+        return this;
+    }
+    /**
+     * 将当前矩阵进行缩放
+     * @param sx x 轴缩放系数，偏移系数
+     * @param sy y 轴缩放系数，偏移系数
+     * @returns 当前矩阵
+     */
+    scale(sx, sy) {
+        this.a *= sx;
+        this.d *= sy;
+        this.c *= sx;
+        this.b *= sy;
+        return this;
+    }
+    /**
+     * 将当前矩阵进行平移
+     * @param x x 轴平移距离
+     * @param y y 轴平移距离
+     * @returns 当前矩阵
+     */
+    translate(x, y) {
+        this.dx += x;
+        this.dy += y;
+        return this;
+    }
+    /**
+     * 将当前矩阵单位化
+     * @returns 当前矩阵
+     */
+    identity() {
+        this.a = this.d = 1;
+        this.b = this.c = this.dx = this.dy = 0;
+        return this;
+    }
+    /**
+     * 将当前矩阵逆转换
+     * @returns 当前矩阵
+     */
+    invert() {
+        const a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx;
+        const i = a * d - b * c;
+        this.a = d / i;
+        this.b = -b / i;
+        this.c = -c / i;
+        this.d = a / i;
+        this.dx = (c * this.dy - d * dx) / i;
+        this.dy = -(a * this.dy - b * dx) / i;
+        return this;
+    }
+    destroy() {
+    }
+}
+
+class Transform2d extends HashObject {
+    constructor() {
+        super();
+        /** 旋转角度 */
+        this._rotation = 0;
+        /** x轴放大倍数 */
+        this._scaleX = 1;
+        /** y轴放大倍数 */
+        this._scaleY = 1;
+        /** x轴位移 */
+        this._x = 0;
+        /** y轴位移 */
+        this._y = 0;
+        /** x轴倾斜角度 */
+        this._skewX = 0;
+        /** y轴倾斜角度 */
+        this._skewY = 0;
+        /** x轴锚点 */
+        this._anchorX = 0;
+        /** y轴锚点 */
+        this._anchorY = 0;
+        this._instanceType = 'Transform2d';
+        this._mMatrix = new Matrix2d();
+    }
+    get matrix() {
+        return this._mMatrix;
+    }
+    /** 旋转角度 */
+    get rotation() {
+        return this._rotation;
+    }
+    set rotation(val) {
+        if (this._rotation !== val) {
+            this._rotation = val;
+            this._mMatrix.rotate(val);
+        }
+    }
+    get scaleX() {
+        return this._scaleX;
+    }
+    set scaleX(val) {
+        if (this._scaleX !== val) {
+            this._mMatrix.scale(val / this._scaleX, 1);
+            this._scaleX = val;
+        }
+    }
+    get scaleY() {
+        return this._scaleY;
+    }
+    set scaleY(val) {
+        if (this._scaleY !== val) {
+            this._mMatrix.scale(1, val / this._scaleY);
+            this._scaleY = val;
+        }
+    }
+    get anchorX() {
+        return this._anchorX;
+    }
+    set anchorX(val) {
+        if (this._anchorX !== val) {
+            this._mMatrix.translate((val - this._anchorX) * this.scaleX, 0);
+            this._anchorX = val;
+        }
+    }
+    get anchorY() {
+        return this._anchorY;
+    }
+    set anchorY(val) {
+        if (this._anchorY !== val) {
+            this._mMatrix.translate(0, (val - this._anchorY) * this.scaleY);
+            this._anchorY = val;
+        }
+    }
+    get x() {
+        return this._x;
+    }
+    set x(val) {
+        if (this._x !== val) {
+            this._mMatrix.translate(val - this._x, 0);
+            this._x = val;
+        }
+    }
+    get y() {
+        return this._y;
+    }
+    set y(val) {
+        if (this._y !== val) {
+            this._mMatrix.translate(0, val - this._y);
+            this._y = val;
+        }
+    }
+    destroy() {
+    }
+}
+
 var RENDER_TYPE;
 (function (RENDER_TYPE) {
     RENDER_TYPE[RENDER_TYPE["CANVAS"] = 0] = "CANVAS";
@@ -702,14 +934,16 @@ class Node extends EventDispatcher {
         this._instanceType = 'Node';
         this._width = 0;
         this._height = 0;
-        this._x = 0;
-        this._y = 0;
+        this._anchorX = 0;
+        this._anchorY = 0;
         this._opacity = 1;
         this._destroyed = false;
         this._parent = null;
         /**@internal 子对象集合 */
         this._children = Node.ARRAY_EMPTY;
+        this._transform = new Transform2d();
     }
+    /** 透明度 */
     get opacity() {
         return this._opacity;
     }
@@ -718,22 +952,36 @@ class Node extends EventDispatcher {
             this._opacity = val;
         }
     }
+    /** 相对父容器的x轴偏移量 */
     get x() {
-        return this._x;
+        return this._transform.x;
     }
     set x(val) {
-        if (this._x !== val) {
-            this._x = val;
+        if (this.x !== val) {
+            this._transform.x = val;
         }
     }
+    /** 相对父容器的y轴偏移量 */
     get y() {
-        return this._y;
+        return this._transform.y;
     }
     set y(val) {
-        if (this._y !== val) {
-            this._y = val;
+        if (this.y !== val) {
+            this._transform.y = val;
         }
     }
+    /**
+     * 设置位置
+     * @param x x轴相对父容器偏移量
+     * @param y y轴相对父容器偏移量
+     * @returns 对象本身
+     */
+    setPos(x, y) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+    /** 节点的宽 */
     get width() {
         return this._width;
     }
@@ -742,6 +990,7 @@ class Node extends EventDispatcher {
             this._width = val;
         }
     }
+    /** 节点的高 */
     get height() {
         return this._height;
     }
@@ -750,6 +999,77 @@ class Node extends EventDispatcher {
             this._height = val;
         }
     }
+    /** x轴缩放 */
+    get scaleX() {
+        return this._transform.scaleX;
+    }
+    set scaleX(val) {
+        if (this.scaleX !== val) {
+            this._transform.scaleX = val;
+        }
+    }
+    /** y轴缩放值 */
+    get scaleY() {
+        return this._transform.scaleY;
+    }
+    set scaleY(val) {
+        if (this.scaleY !== val) {
+            this._transform.scaleY = val;
+        }
+    }
+    /**
+     * 设置缩放量
+     * @param x x轴缩放倍数
+     * @param y y轴缩放倍数
+     * @returns 对象本身
+     */
+    setScale(x, y) {
+        this.scaleX = x;
+        this.scaleY = y;
+        return this;
+    }
+    /** 旋转角度 */
+    get rotation() {
+        return this._transform.rotation;
+    }
+    set rotation(val) {
+        if (this.rotation !== val) {
+            this._transform.rotation = val;
+        }
+    }
+    get transform() {
+        return this._transform;
+    }
+    /** x轴锚点 */
+    get anchorX() {
+        return this._transform.anchorX;
+    }
+    set anchorX(val) {
+        if (this.anchorX !== val) {
+            this._transform.anchorX = val;
+        }
+    }
+    /** y轴锚点 */
+    get anchorY() {
+        return this._transform.anchorY;
+    }
+    set anchorY(val) {
+        if (this.anchorY !== val) {
+            this._transform.anchorY = val;
+        }
+    }
+    /**
+     * 设置锚点
+     * @param x x轴锚点位置
+     * @param y y轴锚点位置
+     * @returns 对象本身
+     */
+    setAnchor(x, y) {
+        this.anchorX = x;
+        this.anchorY = y;
+        return this;
+    }
+    /** 是否销毁 */
     get destroyed() {
         return this._destroyed;
     }
@@ -758,6 +1078,7 @@ class Node extends EventDispatcher {
             this._destroyed = val;
         }
     }
+    /** 父节点 */
     get parent() {
         return this._parent;
     }
@@ -766,9 +1087,11 @@ class Node extends EventDispatcher {
             this._parent = p;
         }
     }
+    /** 子节点数组 */
     get children() {
         return this._children;
     }
+    /** 字节点数目 */
     get childrenNum() {
         return this._children.length;
     }
@@ -986,6 +1309,11 @@ class Node extends EventDispatcher {
         }
         return false;
     }
+    /**
+     * 帧渲染方法
+     * @param renderer 渲染器
+     * @param delta 帧间隔时间
+     */
     _render(renderer, delta) {
         this._setRenderMethod(renderer);
         if ((!this.onUpdate || this.onUpdate(delta) !== false) && renderer.startDraw(this)) {
@@ -1000,7 +1328,6 @@ class Node extends EventDispatcher {
      * @param delta 帧间隔时间
      */
     _renderCanvas(renderer, delta) {
-        renderer.clear(this.x, this.y, this.width, this.height);
         const children = this.children;
         for (let i = 0, n = children.length; i < n; i++) {
             const child = children[i];
@@ -1013,6 +1340,11 @@ class Node extends EventDispatcher {
      * @param delta 帧间隔时间
      */
     _renderWebGL(renderer, delta) {
+        const children = this.children;
+        for (let i = 0, n = children.length; i < n; i++) {
+            const child = children[i];
+            child._render(renderer, delta);
+        }
     }
     /**
      * 子节点发生改变
@@ -1238,6 +1570,20 @@ class CanvasRenderer extends Renderer {
         this.context.restore();
     }
     transform(target) {
+        const ctx = this.context, matrix = target.transform.matrix, x = target.x, y = target.y, rotation = target.rotation % 360, anchorX = target.anchorX, anchorY = target.anchorY, scaleX = target.scaleX, scaleY = target.scaleY;
+        if (matrix) {
+            ctx.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.dx, matrix.dy);
+        }
+        else {
+            if (x !== 0 || y !== 0)
+                ctx.translate(x, y);
+            if (rotation !== 0)
+                ctx.rotate(rotation * Math.PI / 180);
+            if (scaleX !== 1 || scaleY !== 1)
+                ctx.scale(scaleX, scaleY);
+            if (anchorX !== 0 || anchorY !== 0)
+                ctx.translate(-anchorX, -anchorY);
+        }
     }
     remove(target) {
     }
@@ -1294,7 +1640,7 @@ class Stage extends Node {
         }
     }
     /**
-     *
+     * 舞台帧循环
      * @param dt 游戏循环中使用，触发舞台的更新与渲染，外部不要调用
      */
     tick(dt) {
@@ -1313,6 +1659,74 @@ class Stage extends Node {
         if (renderType === RENDER_TYPE.CANVAS) {
             this.renderer = new CanvasRenderer(canvas);
         }
+    }
+    _renderCanvas(renderer, delta) {
+        renderer.clear(this.x, this.y, this.width, this.height);
+        super._renderCanvas(renderer, delta);
+    }
+    _renderWebGL(renderer, delta) {
+        throw new Error('暂未支持 WebGL 方式渲染 Stage');
+    }
+}
+
+class Texture extends EventDispatcher {
+    constructor(src) {
+        super();
+        this.width = 0;
+        this.height = 0;
+        this.loaded = false;
+        this._instanceType = 'Texture';
+        if (src) {
+            this.load(src);
+        }
+    }
+    load(src) {
+        return new Promise((resolve) => {
+            const img = this.image = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                console.log('加载成功');
+                img.onload = null;
+                this.width = img.naturalWidth;
+                this.height = img.naturalHeight;
+                this.loaded = true;
+                console.log(this);
+                resolve(this);
+            };
+            img.src = src;
+        });
+    }
+}
+
+class Sprite extends Node {
+    constructor(src) {
+        super();
+        this._instanceType = 'Sprite';
+        this.texture = new Texture(src);
+    }
+    get texture() {
+        return this._texture;
+    }
+    set texture(tex) {
+        if (typeof tex === 'string') {
+            this._texture = new Texture(tex);
+        }
+        this._texture = tex;
+        this.width = this._texture.width;
+        this.height = this._texture.height;
+    }
+    _renderCanvas(renderer, delta) {
+        const ctx = renderer.context;
+        const texture = this.texture;
+        const img = texture.image;
+        this.width = texture.width, this.height = texture.height;
+        if (img && this.width && this.height && texture.loaded) {
+            ctx.drawImage(img, -this.anchorX * this.scaleX, -this.anchorY * this.scaleX, this.width * this.scaleX, this.height * this.scaleY);
+        }
+        super._renderCanvas(renderer, delta);
+    }
+    _renderWebGL(renderer, delta) {
+        throw new Error('暂未支持 WebGL 方式渲染 Sprite');
     }
 }
 
@@ -1481,6 +1895,10 @@ class Ticker {
         that.addTick(tickObj);
         return tickObj;
     }
+    /**
+     * 每一帧执行的方法
+     * @returns
+     */
     _tick() {
         if (this._paused)
             return;
@@ -1504,6 +1922,12 @@ class Ticker {
 }
 
 class Tyro2d {
+    /**
+     * 开始游戏
+     * @param stage 舞台对象
+     * @param fps 帧率
+     * @returns
+     */
     static start(stage, fps) {
         if (Tyro2d.stage)
             return;
@@ -1512,15 +1936,27 @@ class Tyro2d {
         Tyro2d.ticker.addTick(stage);
         Tyro2d.ticker.start();
     }
+    /**
+     * 暂停游戏
+     */
     static pause() {
         Tyro2d.ticker.pause();
     }
+    /**
+     * 继续游戏
+     */
     static resume() {
         Tyro2d.ticker.resume();
     }
+    /**
+     * 终止游戏
+     */
     static stop() {
         Tyro2d.ticker.stop();
     }
+    /**
+     * 销毁游戏实例
+     */
     static destroy() {
         Tyro2d.stage.destroy();
         Tyro2d.eventBus.destroy();
@@ -1532,4 +1968,4 @@ class Tyro2d {
 }
 Tyro2d.Event = Event;
 
-export { Event$1 as Event, EventDispatcher, MathTool, Node, Stage, Ticker, Tyro2d, Utils, Vector2d };
+export { Event$1 as Event, EventDispatcher, MathTool, Node, Sprite, Stage, Ticker, Tyro2d, Utils, Vector2d };

@@ -68,7 +68,7 @@ export default class Stage extends Node implements ITickerHandler {
   }
 
   /**
-   * 
+   * 舞台帧循环
    * @param dt 游戏循环中使用，触发舞台的更新与渲染，外部不要调用
    */
   tick(dt: number) {
@@ -88,5 +88,14 @@ export default class Stage extends Node implements ITickerHandler {
     if (renderType === RENDER_TYPE.CANVAS) {
       this.renderer = new CanvasRenderer(canvas)
     }
+  }
+
+  protected _renderCanvas(renderer: Renderer, delta: number) {
+    renderer.clear(this.x, this.y, this.width, this.height)
+    super._renderCanvas(renderer, delta)
+  }
+
+  protected _renderWebGL(renderer: Renderer, delta: number) {
+    throw new Error('暂未支持 WebGL 方式渲染 Stage')
   }
 }

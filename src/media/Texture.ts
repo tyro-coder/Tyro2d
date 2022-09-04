@@ -4,6 +4,7 @@ export default class Texture extends EventDispatcher {
   image: HTMLImageElement
   width: number = 0
   height: number = 0
+  loaded: boolean = false
 
   protected _instanceType: string = 'Texture'
 
@@ -18,11 +19,14 @@ export default class Texture extends EventDispatcher {
   load(src: string): Promise<Texture> {
     return new Promise((resolve) => {
       const img = this.image = new Image()
-      img.crossOrigin = 'Anonymous'
+      img.crossOrigin = 'anonymous'
       img.onload = () => {
+        console.log('加载成功')
         img.onload = null
-        this.width = img.width
-        this.height = img.height
+        this.width = img.naturalWidth
+        this.height = img.naturalHeight
+        this.loaded = true
+        console.log(this)
         resolve(this)
       }
       img.src = src

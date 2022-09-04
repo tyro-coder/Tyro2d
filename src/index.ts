@@ -9,6 +9,7 @@ import EventDispatcher from './event/EventDispatcher'
 /** Display */
 import Node from './display/Node'
 import Stage from './display/Stage'
+import Sprite from './display/Sprite'
 
 /** Utils */
 import Ticker from './utils/Ticker'
@@ -27,6 +28,7 @@ export {
 
   Node,
   Stage,
+  Sprite,
 
   Ticker,
   Utils,

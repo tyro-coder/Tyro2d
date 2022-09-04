@@ -1,4 +1,5 @@
 import HashObject from "../utils/HashObject";
+import MathTool from './MathTool'
 
 /**
  * 2d矩阵类
@@ -20,7 +21,7 @@ export default class Matrix2d extends HashObject {
   /** 沿 y 轴平移每个点的距离 */
   dy: number
 
-  protected _instancedype: string = 'Matrix2d'
+  protected _instanceType: string = 'Matrix2d'
 
   constructor(a: number = 1, b: number = 0, c: number = 0 , d: number = 1, dx: number = 0, dy: number = 0) {
     super()
@@ -94,13 +95,14 @@ export default class Matrix2d extends HashObject {
    * @returns 当前矩阵
    */
   rotate(angle: number): Matrix2d {
-    const sin = Math.sin(angle), cos = Math.cos(angle);
+    const red = MathTool.degToRed(angle)
+    const sin = Math.sin(red), cos = Math.cos(red);
     const a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
 
-    this.a = a * cos - b * sin;
-    this.b = a * sin + b * cos;
-    this.c = c * cos - d * sin;
-    this.d = c * sin + d * cos;
+    this.a = a * cos + c * sin;
+    this.b = b * cos + d * sin;
+    this.c = c * cos - a * sin;
+    this.d = d * cos - b * sin;
     this.dx = dx * cos - dy * sin;
     this.dy = dx * sin + dy * cos;
     return this;
@@ -108,8 +110,8 @@ export default class Matrix2d extends HashObject {
 
   /**
    * 将当前矩阵进行缩放
-   * @param sx x 轴缩放系数
-   * @param sy y 轴缩放系数
+   * @param sx x 轴缩放系数，偏移系数
+   * @param sy y 轴缩放系数，偏移系数
    * @returns 当前矩阵
    */
   scale(sx: number, sy: number): Matrix2d {
@@ -117,8 +119,6 @@ export default class Matrix2d extends HashObject {
     this.d *= sy;
     this.c *= sx;
     this.b *= sy;
-    this.dx *= sx;
-    this.dy *= sy;
     return this;
   }
 

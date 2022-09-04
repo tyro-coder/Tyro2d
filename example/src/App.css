@@ -4,10 +4,7 @@ html, body {
 }
 
 .gameBox {
-  width: 300px;
-  height: 600px;
   top: 0;
-  left: 20px;
   position: absolute;
 }
 

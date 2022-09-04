@@ -8,6 +8,12 @@ export default class Tyro2d {
   static ticker: Ticker
   static eventBus: EventDispatcher
 
+  /**
+   * 开始游戏
+   * @param stage 舞台对象
+   * @param fps 帧率
+   * @returns 
+   */
   static start(stage: Stage, fps: number) {
     if (Tyro2d.stage) return
 
@@ -18,18 +24,30 @@ export default class Tyro2d {
     Tyro2d.ticker.start()
   }
 
+  /**
+   * 暂停游戏
+   */
   static pause() {
     Tyro2d.ticker.pause()
   }
 
+  /**
+   * 继续游戏
+   */
   static resume() {
     Tyro2d.ticker.resume()
   }
 
+  /**
+   * 终止游戏
+   */
   static stop() {
     Tyro2d.ticker.stop()
   }
 
+  /**
+   * 销毁游戏实例
+   */
   static destroy() {
     Tyro2d.stage.destroy()
     Tyro2d.eventBus.destroy()

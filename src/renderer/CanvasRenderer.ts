@@ -21,7 +21,6 @@ export default class CanvasRenderer extends Renderer {
         this.context.globalCompositeOperation = this.blendMode = target.blendMode
       }
       this.context.save()
-
       return true
     }
     return false
@@ -56,7 +55,25 @@ export default class CanvasRenderer extends Renderer {
   }
 
   transform(target: Node): void {
+    const ctx = this.context,
+      matrix = target.transform.matrix,
+      x = target.x,
+      y = target.y,
+      rotation = target.rotation % 360,
+      anchorX = target.anchorX,
+      anchorY = target.anchorY,
+      scaleX = target.scaleX,
+      scaleY = target.scaleY
 
+
+    if (matrix) {
+      ctx.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.dx, matrix.dy)
+    } else {
+      if (x !== 0 || y !== 0) ctx.translate(x, y)
+      if (rotation !== 0) ctx.rotate(rotation * Math.PI / 180)
+      if (scaleX !== 1 || scaleY !== 1) ctx.scale(scaleX, scaleY)
+      if (anchorX !== 0 || anchorY !== 0) ctx.translate(-anchorX, -anchorY)
+    }
   }
 
   remove(target: Node): void {

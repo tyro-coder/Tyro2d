@@ -1,4 +1,5 @@
 import EventDispatcher from "../event/EventDispatcher";
+import Transform2d from "../math/Transform2d";
 import Renderer from "../renderer/Renderer";
 import { RENDER_TYPE } from "../utils/Constants";
 
@@ -25,18 +26,23 @@ export default class Node extends EventDispatcher {
   protected _instanceType: string = 'Node'
   protected _width: number = 0
   protected _height: number = 0
-  protected _x: number = 0
-  protected _y: number = 0
+  protected _anchorX: number = 0
+  protected _anchorY: number = 0
   private _opacity: number = 1
   private _destroyed: boolean = false
   private _parent: Node | null = null
+  /** 节点的变换实例 */
+  private _transform: Transform2d
   /**@internal 子对象集合 */
   private _children: Node[] = Node.ARRAY_EMPTY
 
   constructor() {
     super()
+
+    this._transform = new Transform2d()
   }
 
+  /** 透明度 */
   get opacity(): number {
     return this._opacity
   }
@@ -46,24 +52,39 @@ export default class Node extends EventDispatcher {
     }
   }
 
+  /** 相对父容器的x轴偏移量 */
   get x(): number {
-    return this._x
+    return this._transform.x
   }
   set x(val: number) {
-    if (this._x !== val) {
-      this._x = val
+    if (this.x !== val) {
+      this._transform.x = val
     }
   }
 
+  /** 相对父容器的y轴偏移量 */
   get y(): number {
-    return this._y
+    return this._transform.y
   }
   set y(val: number) {
-    if (this._y !== val) {
-      this._y = val
+    if (this.y !== val) {
+      this._transform.y = val
     }
   }
 
+  /**
+   * 设置位置
+   * @param x x轴相对父容器偏移量
+   * @param y y轴相对父容器偏移量
+   * @returns 对象本身
+   */
+  public setPos(x: number, y: number): Node {
+    this.x = x
+    this.y = y
+    return this
+  }
+
+  /** 节点的宽 */
   get width(): number {
     return this._width
   }
@@ -73,6 +94,7 @@ export default class Node extends EventDispatcher {
     }
   }
 
+  /** 节点的高 */
   get height(): number {
     return this._height
   }
@@ -82,6 +104,85 @@ export default class Node extends EventDispatcher {
     }
   }
 
+  /** x轴缩放 */
+  get scaleX(): number {
+    return this._transform.scaleX
+  }
+  set scaleX(val: number) {
+    if (this.scaleX !== val) {
+      this._transform.scaleX = val
+    }
+  }
+
+  /** y轴缩放值 */
+  get scaleY(): number {
+    return this._transform.scaleY
+  }
+  set scaleY(val: number) {
+    if (this.scaleY !== val) {
+      this._transform.scaleY = val
+    }
+  }
+
+  /**
+   * 设置缩放量
+   * @param x x轴缩放倍数
+   * @param y y轴缩放倍数
+   * @returns 对象本身
+   */
+  public setScale(x: number, y: number): Node {
+    this.scaleX = x
+    this.scaleY = y
+    return this
+  }
+
+  /** 旋转角度 */
+  get rotation(): number {
+    return this._transform.rotation
+  }
+  set rotation(val: number) {
+    if (this.rotation !== val) {
+      this._transform.rotation = val
+    }
+  }
+
+  get transform(): Transform2d {
+    return this._transform
+  }
+
+  /** x轴锚点 */
+  get anchorX(): number {
+    return this._transform.anchorX
+  }
+  set anchorX(val: number) {
+    if (this.anchorX !== val) {
+      this._transform.anchorX = val
+    }
+  }
+
+  /** y轴锚点 */
+  get anchorY(): number {
+    return this._transform.anchorY
+  }
+  set anchorY(val: number) {
+    if (this.anchorY !== val) {
+      this._transform.anchorY = val
+    }
+  }
+
+  /**
+   * 设置锚点
+   * @param x x轴锚点位置
+   * @param y y轴锚点位置
+   * @returns 对象本身
+   */
+  setAnchor(x: number, y: number): Node {
+    this.anchorX = x
+    this.anchorY = y
+    return this
+  }
+
+  /** 是否销毁 */
   get destroyed(): boolean {
     return this._destroyed
   }
@@ -91,6 +192,7 @@ export default class Node extends EventDispatcher {
     }
   }
 
+  /** 父节点 */
   get parent(): Node | null {
     return this._parent
   }
@@ -100,10 +202,12 @@ export default class Node extends EventDispatcher {
     }
   }
 
+  /** 子节点数组 */
   get children(): Node[] {
     return this._children
   }
 
+  /** 字节点数目 */
   get childrenNum(): number {
     return this._children.length
   }
@@ -327,6 +431,11 @@ export default class Node extends EventDispatcher {
     return false
   }
 
+  /**
+   * 帧渲染方法
+   * @param renderer 渲染器
+   * @param delta 帧间隔时间
+   */
   protected _render(renderer: Renderer, delta: number) {
     this._setRenderMethod(renderer)
     if ((!this.onUpdate || this.onUpdate(delta) !== false) && renderer.startDraw(this)) {
@@ -342,7 +451,6 @@ export default class Node extends EventDispatcher {
    * @param delta 帧间隔时间
    */
   protected _renderCanvas(renderer: Renderer, delta: number) {
-    renderer.clear(this.x, this.y, this.width, this.height)
     const children = this.children
     for (let i = 0, n = children.length; i < n; i++) {
       const child = children[i]
@@ -355,6 +463,11 @@ export default class Node extends EventDispatcher {
    * @param delta 帧间隔时间
    */
   protected _renderWebGL(renderer: Renderer, delta: number) {
+    const children = this.children
+    for (let i = 0, n = children.length; i < n; i++) {
+      const child = children[i]
+      child._render(renderer, delta)
+    }
   }
 
   /**

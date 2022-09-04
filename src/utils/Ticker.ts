@@ -189,6 +189,10 @@ export default class Ticker {
     return tickObj;
   }
 
+  /**
+   * 每一帧执行的方法
+   * @returns 
+   */
   private _tick() {
     if (this._paused) return;
     const startTime = Browser.now,
