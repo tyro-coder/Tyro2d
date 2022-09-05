@@ -12,7 +12,6 @@ import Stage from './display/Stage'
 import Sprite from './display/Sprite'
 
 /** Utils */
-import Ticker from './utils/Ticker'
 import Utils from './utils/Utils'
 
 import Tyro2d from './Tyro2d'
@@ -30,6 +29,5 @@ export {
   Stage,
   Sprite,
 
-  Ticker,
   Utils,
 }

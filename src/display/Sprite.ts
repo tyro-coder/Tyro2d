@@ -34,10 +34,10 @@ export default class Sprite extends Node {
     if (img && this.width && this.height && texture.loaded) {
       ctx.drawImage(
         img,
-        -this.anchorX * this.scaleX,
-        -this.anchorY * this.scaleX,
-        this.width * this.scaleX,
-        this.height * this.scaleY
+        0,
+        0,
+        this.width,
+        this.height,
       )
     }
 

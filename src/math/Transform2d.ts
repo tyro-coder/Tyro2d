@@ -2,6 +2,10 @@ import HashObject from "../utils/HashObject";
 import Matrix2d from "./Matrix2d";
 
 export default class Transform2d extends HashObject {
+  /** 节点的宽 */
+  private _width: number = 0
+  /** 节点的高 */
+  private _height: number = 0
   /** 旋转角度 */
   private _rotation: number = 0
   /** x轴放大倍数 */
@@ -12,28 +16,42 @@ export default class Transform2d extends HashObject {
   private _x: number = 0
   /** y轴位移 */
   private _y: number = 0
-  /** x轴倾斜角度 */
-  private _skewX: number = 0
-  /** y轴倾斜角度 */
-  private _skewY: number = 0
   /** x轴锚点 */
   private _anchorX: number = 0
   /** y轴锚点 */
   private _anchorY: number = 0
 
   /** 2d矩阵 */
-  private _mMatrix: Matrix2d
+  private _mMatrix: Matrix2d = new Matrix2d()
 
   protected _instanceType: string = 'Transform2d'
 
   constructor() {
     super()
-
-    this._mMatrix = new Matrix2d()
   }
 
   get matrix(): Matrix2d {
     return this._mMatrix
+  }
+
+  get width(): number {
+    return this._width
+  }
+  set width(val: number) {
+    if (this._width !== val) {
+      this._width = val
+      this._resetMatrix()
+    }
+  }
+
+  get height(): number {
+    return this._height
+  }
+  set height(val: number) {
+    if (this._height !== val) {
+      this._height = val
+      this._resetMatrix()
+    }
   }
 
   /** 旋转角度 */
@@ -43,7 +61,6 @@ export default class Transform2d extends HashObject {
   set rotation(val: number) {
     if (this._rotation !== val) {
       this._rotation = val
-      this._mMatrix.rotate(val)
     }
   }
 
@@ -52,8 +69,8 @@ export default class Transform2d extends HashObject {
   }
   set scaleX(val: number) {
     if (this._scaleX !== val) {
-      this._mMatrix.scale(val / this._scaleX, 1)
       this._scaleX = val
+      this._resetMatrix()
     }
   }
 
@@ -62,8 +79,8 @@ export default class Transform2d extends HashObject {
   }
   set scaleY(val: number) {
     if (this._scaleY !== val) {
-      this._mMatrix.scale(1, val / this._scaleY)
       this._scaleY = val
+      this._resetMatrix()
     }
   }
 
@@ -72,8 +89,8 @@ export default class Transform2d extends HashObject {
   }
   set anchorX(val: number) {
     if (this._anchorX !== val) {
-      this._mMatrix.translate((val - this._anchorX) * this.scaleX, 0)
       this._anchorX = val
+      this._resetMatrix()
     }
   }
 
@@ -82,8 +99,8 @@ export default class Transform2d extends HashObject {
   }
   set anchorY(val: number) {
     if (this._anchorY !== val) {
-      this._mMatrix.translate(0, (val - this._anchorY) * this.scaleY)
       this._anchorY = val
+      this._resetMatrix()
     }
   }
 
@@ -92,8 +109,8 @@ export default class Transform2d extends HashObject {
   }
   set x(val: number) {
     if (this._x !== val) {
-      this._mMatrix.translate(val - this._x, 0)
       this._x = val
+      this._resetMatrix()
     }
   }
 
@@ -102,9 +119,27 @@ export default class Transform2d extends HashObject {
   }
   set y(val: number) {
     if (this._y !== val) {
-      this._mMatrix.translate(0, val - this._y)
       this._y = val
+      this._resetMatrix()
     }
+  }
+
+  /** 刷新位置矩阵数据 */
+  private _resetMatrix() {
+    let  x = this.x, y = this.y
+    const anchorX = this.anchorX,
+      anchorY = this.anchorY,
+      scaleX = this.scaleX,
+      scaleY = this.scaleY,
+      width = this.width,
+      height = this.height
+
+    console.log(this)
+
+    if (anchorX !== 0) x = (x - anchorX * width)
+    if (anchorY !== 0) y = (y - anchorY * height)
+
+    this._mMatrix.set(scaleX, 0, 0, scaleY, x, y)
   }
 
   destroy(): void {

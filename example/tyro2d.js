@@ -4,7 +4,7 @@ class MathTool {
      * @param angle 角度
      * @returns
      */
-    static degToRed(angle) {
+    static degToRad(angle) {
         return angle * MathTool.DEG_TO_RAD;
     }
     /**
@@ -753,7 +753,7 @@ class Matrix2d extends HashObject {
      * @returns 当前矩阵
      */
     rotate(angle) {
-        const red = MathTool.degToRed(angle);
+        const red = MathTool.degToRad(angle);
         const sin = Math.sin(red), cos = Math.cos(red);
         const a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
         this.a = a * cos + c * sin;
@@ -772,9 +772,9 @@ class Matrix2d extends HashObject {
      */
     scale(sx, sy) {
         this.a *= sx;
+        this.b *= sx;
+        this.c *= sy;
         this.d *= sy;
-        this.c *= sx;
-        this.b *= sy;
         return this;
     }
     /**
@@ -819,6 +819,10 @@ class Matrix2d extends HashObject {
 class Transform2d extends HashObject {
     constructor() {
         super();
+        /** 节点的宽 */
+        this._width = 0;
+        /** 节点的高 */
+        this._height = 0;
         /** 旋转角度 */
         this._rotation = 0;
         /** x轴放大倍数 */
@@ -829,19 +833,34 @@ class Transform2d extends HashObject {
         this._x = 0;
         /** y轴位移 */
         this._y = 0;
-        /** x轴倾斜角度 */
-        this._skewX = 0;
-        /** y轴倾斜角度 */
-        this._skewY = 0;
         /** x轴锚点 */
         this._anchorX = 0;
         /** y轴锚点 */
         this._anchorY = 0;
-        this._instanceType = 'Transform2d';
+        /** 2d矩阵 */
         this._mMatrix = new Matrix2d();
+        this._instanceType = 'Transform2d';
     }
     get matrix() {
         return this._mMatrix;
+    }
+    get width() {
+        return this._width;
+    }
+    set width(val) {
+        if (this._width !== val) {
+            this._width = val;
+            this._resetMatrix();
+        }
+    }
+    get height() {
+        return this._height;
+    }
+    set height(val) {
+        if (this._height !== val) {
+            this._height = val;
+            this._resetMatrix();
+        }
     }
     /** 旋转角度 */
     get rotation() {
@@ -850,7 +869,6 @@ class Transform2d extends HashObject {
     set rotation(val) {
         if (this._rotation !== val) {
             this._rotation = val;
-            this._mMatrix.rotate(val);
         }
     }
     get scaleX() {
@@ -858,8 +876,8 @@ class Transform2d extends HashObject {
     }
     set scaleX(val) {
         if (this._scaleX !== val) {
-            this._mMatrix.scale(val / this._scaleX, 1);
             this._scaleX = val;
+            this._resetMatrix();
         }
     }
     get scaleY() {
@@ -867,8 +885,8 @@ class Transform2d extends HashObject {
     }
     set scaleY(val) {
         if (this._scaleY !== val) {
-            this._mMatrix.scale(1, val / this._scaleY);
             this._scaleY = val;
+            this._resetMatrix();
         }
     }
     get anchorX() {
@@ -876,8 +894,8 @@ class Transform2d extends HashObject {
     }
     set anchorX(val) {
         if (this._anchorX !== val) {
-            this._mMatrix.translate((val - this._anchorX) * this.scaleX, 0);
             this._anchorX = val;
+            this._resetMatrix();
         }
     }
     get anchorY() {
@@ -885,8 +903,8 @@ class Transform2d extends HashObject {
     }
     set anchorY(val) {
         if (this._anchorY !== val) {
-            this._mMatrix.translate(0, (val - this._anchorY) * this.scaleY);
             this._anchorY = val;
+            this._resetMatrix();
         }
     }
     get x() {
@@ -894,8 +912,8 @@ class Transform2d extends HashObject {
     }
     set x(val) {
         if (this._x !== val) {
-            this._mMatrix.translate(val - this._x, 0);
             this._x = val;
+            this._resetMatrix();
         }
     }
     get y() {
@@ -903,9 +921,20 @@ class Transform2d extends HashObject {
     }
     set y(val) {
         if (this._y !== val) {
-            this._mMatrix.translate(0, val - this._y);
             this._y = val;
+            this._resetMatrix();
         }
+    }
+    /** 刷新位置矩阵数据 */
+    _resetMatrix() {
+        let x = this.x, y = this.y;
+        const anchorX = this.anchorX, anchorY = this.anchorY, scaleX = this.scaleX, scaleY = this.scaleY, width = this.width, height = this.height;
+        console.log(this);
+        if (anchorX !== 0)
+            x = (x - anchorX * width);
+        if (anchorY !== 0)
+            y = (y - anchorY * height);
+        this._mMatrix.set(scaleX, 0, 0, scaleY, x, y);
     }
     destroy() {
     }
@@ -934,8 +963,6 @@ class Node extends EventDispatcher {
         this._instanceType = 'Node';
         this._width = 0;
         this._height = 0;
-        this._anchorX = 0;
-        this._anchorY = 0;
         this._opacity = 1;
         this._destroyed = false;
         this._parent = null;
@@ -988,6 +1015,7 @@ class Node extends EventDispatcher {
     set width(val) {
         if (this._width !== val) {
             this._width = val;
+            this._transform.width = val;
         }
     }
     /** 节点的高 */
@@ -997,6 +1025,7 @@ class Node extends EventDispatcher {
     set height(val) {
         if (this._height !== val) {
             this._height = val;
+            this._transform.height = val;
         }
     }
     /** x轴缩放 */
@@ -1006,6 +1035,7 @@ class Node extends EventDispatcher {
     set scaleX(val) {
         if (this.scaleX !== val) {
             this._transform.scaleX = val;
+            this.width *= (val / this.scaleX);
         }
     }
     /** y轴缩放值 */
@@ -1015,6 +1045,7 @@ class Node extends EventDispatcher {
     set scaleY(val) {
         if (this.scaleY !== val) {
             this._transform.scaleY = val;
+            this.height *= (val / this.scaleY);
         }
     }
     /**
@@ -1310,6 +1341,18 @@ class Node extends EventDispatcher {
         return false;
     }
     /**
+     * 获取串联的矩阵信息
+     * @param ancestor 祖先节点
+     * @returns
+     */
+    getConcatenatedMatrix(ancestor) {
+        const mtx = new Matrix2d();
+        for (let o = this; o !== ancestor && o.parent; o = o.parent) {
+            mtx.concat(o.transform.matrix);
+        }
+        return mtx;
+    }
+    /**
      * 帧渲染方法
      * @param renderer 渲染器
      * @param delta 帧间隔时间
@@ -1539,32 +1582,23 @@ class CanvasRenderer extends Renderer {
     }
     startDraw(target) {
         if (target.visible && target.opacity > 0) {
+            const ctx = this.context;
             if (target.blendMode !== this.blendMode) {
-                this.context.globalCompositeOperation = this.blendMode = target.blendMode;
+                ctx.globalCompositeOperation = this.blendMode = target.blendMode;
             }
-            this.context.save();
+            ctx.save();
+            // 在绘图前将旋转的中心点先找出来
+            const { anchorX, anchorY, rotation, width, height, scaleX, scaleY } = target.transform;
+            if (rotation !== 0) {
+                const anchorWidth = anchorX * width * scaleX;
+                const anchorHeight = anchorY * height * scaleY;
+                ctx.translate(anchorWidth, anchorHeight);
+                ctx.rotate(MathTool.degToRad(rotation));
+                ctx.translate(-anchorWidth, -anchorHeight);
+            }
             return true;
         }
         return false;
-    }
-    draw(target) {
-        // const ctx = this.context,
-        //   w = target.width,
-        //   h = target.height
-        // // 绘制舞台背景颜色
-        // if (target instanceof Stage) {
-        //   const bg = target.background
-        //   if (bg) {
-        //     ctx.fillStyle = bg
-        //     ctx.fillRect(0, 0, w, h)
-        //   }
-        // }
-        // // if (target instanceof Sprite) {
-        // //   const texture = target.texture
-        // //   const img = texture.image, imgW = texture.width, imgH = texture.height
-        // //   if (!img || !imgW || !imgH) return
-        // //   ctx.drawImage(img, target.x, target.y, imgW, imgH)
-        // // }
     }
     endDraw(target) {
         this.context.restore();
@@ -1721,7 +1755,7 @@ class Sprite extends Node {
         const img = texture.image;
         this.width = texture.width, this.height = texture.height;
         if (img && this.width && this.height && texture.loaded) {
-            ctx.drawImage(img, -this.anchorX * this.scaleX, -this.anchorY * this.scaleX, this.width * this.scaleX, this.height * this.scaleY);
+            ctx.drawImage(img, 0, 0, this.width, this.height);
         }
         super._renderCanvas(renderer, delta);
     }
@@ -1921,6 +1955,732 @@ class Ticker {
     }
 }
 
+/**
+ * Ease 类定义了缓动函数，以便实现 Tween 动画的缓动效果。
+ */
+class Ease {
+    /**
+     * 定义无加速持续运动。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static linearNone(t, b, c, d) {
+        return (c * t) / d + b;
+    }
+    /**
+     * 定义无加速持续运动。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static linearIn(t, b, c, d) {
+        return (c * t) / d + b;
+    }
+    /**
+     * 定义无加速持续运动。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static linearInOut(t, b, c, d) {
+        return (c * t) / d + b;
+    }
+    /**
+     * 定义无加速持续运动。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static linearOut(t, b, c, d) {
+        return (c * t) / d + b;
+    }
+    /**
+     * 方法以零速率开始运动，然后在执行时加快运动速度。
+     * 它的运动是类似一个球落向地板又弹起后，几次逐渐减小的回弹运动。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static bounceIn(t, b, c, d) {
+        return c - Ease.bounceOut(d - t, 0, c, d) + b;
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * 它的运动是类似一个球落向地板又弹起后，几次逐渐减小的回弹运动。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static bounceInOut(t, b, c, d) {
+        if (t < d * 0.5)
+            return Ease.bounceIn(t * 2, 0, c, d) * 0.5 + b;
+        else
+            return Ease.bounceOut(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * 它的运动是类似一个球落向地板又弹起后，几次逐渐减小的回弹运动。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static bounceOut(t, b, c, d) {
+        if ((t /= d) < 1 / 2.75)
+            return c * (7.5625 * t * t) + b;
+        else if (t < 2 / 2.75)
+            return c * (7.5625 * (t -= 1.5 / 2.75) * t + 0.75) + b;
+        else if (t < 2.5 / 2.75)
+            return c * (7.5625 * (t -= 2.25 / 2.75) * t + 0.9375) + b;
+        else
+            return c * (7.5625 * (t -= 2.625 / 2.75) * t + 0.984375) + b;
+    }
+    /**
+     * 开始时往后运动，然后反向朝目标移动。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @param	s 指定过冲量，此处数值越大，过冲越大。
+     * @return 指定时间的插补属性的值。
+     */
+    static backIn(t, b, c, d, s = 1.70158) {
+        return c * (t /= d) * t * ((s + 1) * t - s) + b;
+    }
+    /**
+     * 开始运动时是向后跟踪，再倒转方向并朝目标移动，稍微过冲目标，然后再次倒转方向，回来朝目标移动。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @param	s 指定过冲量，此处数值越大，过冲越大。
+     * @return 指定时间的插补属性的值。
+     */
+    static backInOut(t, b, c, d, s = 1.70158) {
+        if ((t /= d * 0.5) < 1)
+            return c * 0.5 * (t * t * (((s *= 1.525) + 1) * t - s)) + b;
+        return (c / 2) * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2) + b;
+    }
+    /**
+     * 开始运动时是朝目标移动，稍微过冲，再倒转方向回来朝着目标。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @param	s 指定过冲量，此处数值越大，过冲越大。
+     * @return 指定时间的插补属性的值。
+     */
+    static backOut(t, b, c, d, s = 1.70158) {
+        return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
+    }
+    /**
+     * 方法以零速率开始运动，然后在执行时加快运动速度。
+     * 其中的运动由按照指数方式衰减的正弦波来定义。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @param	a 指定正弦波的幅度。
+     * @param	p 指定正弦波的周期。
+     * @return 指定时间的插补属性的值。
+     */
+    static elasticIn(t, b, c, d, a = 0, p = 0) {
+        let s;
+        if (t == 0)
+            return b;
+        if ((t /= d) == 1)
+            return b + c;
+        if (!p)
+            p = d * 0.3;
+        if (!a || (c > 0 && a < c) || (c < 0 && a < -c)) {
+            a = c;
+            s = p / 4;
+        }
+        else
+            s = (p / Ease.PI2) * Math.asin(c / a);
+        return (-(a *
+            Math.pow(2, 10 * (t -= 1)) *
+            Math.sin(((t * d - s) * Ease.PI2) / p)) + b);
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * 其中的运动由按照指数方式衰减的正弦波来定义。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @param	a 指定正弦波的幅度。
+     * @param	p 指定正弦波的周期。
+     * @return 指定时间的插补属性的值。
+     */
+    static elasticInOut(t, b, c, d, a = 0, p = 0) {
+        let s;
+        if (t == 0)
+            return b;
+        if ((t /= d * 0.5) == 2)
+            return b + c;
+        if (!p)
+            p = d * (0.3 * 1.5);
+        if (!a || (c > 0 && a < c) || (c < 0 && a < -c)) {
+            a = c;
+            s = p / 4;
+        }
+        else
+            s = (p / Ease.PI2) * Math.asin(c / a);
+        if (t < 1)
+            return (-0.5 *
+                (a *
+                    Math.pow(2, 10 * (t -= 1)) *
+                    Math.sin(((t * d - s) * Ease.PI2) / p)) +
+                b);
+        return (a *
+            Math.pow(2, -10 * (t -= 1)) *
+            Math.sin(((t * d - s) * Ease.PI2) / p) *
+            0.5 +
+            c +
+            b);
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * 其中的运动由按照指数方式衰减的正弦波来定义。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @param	a 指定正弦波的幅度。
+     * @param	p 指定正弦波的周期。
+     * @return 指定时间的插补属性的值。
+     */
+    static elasticOut(t, b, c, d, a = 0, p = 0) {
+        let s;
+        if (t == 0)
+            return b;
+        if ((t /= d) == 1)
+            return b + c;
+        if (!p)
+            p = d * 0.3;
+        if (!a || (c > 0 && a < c) || (c < 0 && a < -c)) {
+            a = c;
+            s = p / 4;
+        }
+        else
+            s = (p / Ease.PI2) * Math.asin(c / a);
+        return (a * Math.pow(2, -10 * t) * Math.sin(((t * d - s) * Ease.PI2) / p) + c + b);
+    }
+    /**
+     * 以零速率开始运动，然后在执行时加快运动速度。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static strongIn(t, b, c, d) {
+        return c * (t /= d) * t * t * t * t + b;
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static strongInOut(t, b, c, d) {
+        if ((t /= d * 0.5) < 1)
+            return c * 0.5 * t * t * t * t * t + b;
+        return c * 0.5 * ((t -= 2) * t * t * t * t + 2) + b;
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static strongOut(t, b, c, d) {
+        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * Sine 缓动方程中的运动加速度小于 Quad 方程中的运动加速度。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static sineInOut(t, b, c, d) {
+        return -c * 0.5 * (Math.cos((Math.PI * t) / d) - 1) + b;
+    }
+    /**
+     * 以零速率开始运动，然后在执行时加快运动速度。
+     * Sine 缓动方程中的运动加速度小于 Quad 方程中的运动加速度。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static sineIn(t, b, c, d) {
+        return -c * Math.cos((t / d) * Ease.HALF_PI) + c + b;
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * Sine 缓动方程中的运动加速度小于 Quad 方程中的运动加速度。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static sineOut(t, b, c, d) {
+        return c * Math.sin((t / d) * Ease.HALF_PI) + b;
+    }
+    /**
+     * 以零速率开始运动，然后在执行时加快运动速度。
+     * Quint 缓动方程的运动加速大于 Quart 缓动方程。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static quintIn(t, b, c, d) {
+        return c * (t /= d) * t * t * t * t + b;
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * Quint 缓动方程的运动加速大于 Quart 缓动方程。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static quintInOut(t, b, c, d) {
+        if ((t /= d * 0.5) < 1)
+            return c * 0.5 * t * t * t * t * t + b;
+        return c * 0.5 * ((t -= 2) * t * t * t * t + 2) + b;
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * Quint 缓动方程的运动加速大于 Quart 缓动方程。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static quintOut(t, b, c, d) {
+        return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+    }
+    /**
+     * 方法以零速率开始运动，然后在执行时加快运动速度。
+     * Quart 缓动方程的运动加速大于 Cubic 缓动方程。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static quartIn(t, b, c, d) {
+        return c * (t /= d) * t * t * t + b;
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * Quart 缓动方程的运动加速大于 Cubic 缓动方程。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static quartInOut(t, b, c, d) {
+        if ((t /= d * 0.5) < 1)
+            return c * 0.5 * t * t * t * t + b;
+        return -c * 0.5 * ((t -= 2) * t * t * t - 2) + b;
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * Quart 缓动方程的运动加速大于 Cubic 缓动方程。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static quartOut(t, b, c, d) {
+        return -c * ((t = t / d - 1) * t * t * t - 1) + b;
+    }
+    /**
+     * 方法以零速率开始运动，然后在执行时加快运动速度。
+     * Cubic 缓动方程的运动加速大于 Quad 缓动方程。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static cubicIn(t, b, c, d) {
+        return c * (t /= d) * t * t + b;
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * Cubic 缓动方程的运动加速大于 Quad 缓动方程。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static cubicInOut(t, b, c, d) {
+        if ((t /= d * 0.5) < 1)
+            return c * 0.5 * t * t * t + b;
+        return c * 0.5 * ((t -= 2) * t * t + 2) + b;
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * Cubic 缓动方程的运动加速大于 Quad 缓动方程。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static cubicOut(t, b, c, d) {
+        return c * ((t = t / d - 1) * t * t + 1) + b;
+    }
+    /**
+     * 方法以零速率开始运动，然后在执行时加快运动速度。
+     * Quad 缓动方程中的运动加速度等于 100% 缓动的时间轴补间的运动加速度，并且显著小于 Cubic 缓动方程中的运动加速度。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static quadIn(t, b, c, d) {
+        return c * (t /= d) * t + b;
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * Quad 缓动方程中的运动加速度等于 100% 缓动的时间轴补间的运动加速度，并且显著小于 Cubic 缓动方程中的运动加速度。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static quadInOut(t, b, c, d) {
+        if ((t /= d * 0.5) < 1)
+            return c * 0.5 * t * t + b;
+        return -c * 0.5 * (--t * (t - 2) - 1) + b;
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * Quad 缓动方程中的运动加速度等于 100% 缓动的时间轴补间的运动加速度，并且显著小于 Cubic 缓动方程中的运动加速度。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static quadOut(t, b, c, d) {
+        return -c * (t /= d) * (t - 2) + b;
+    }
+    /**
+     * 方法以零速率开始运动，然后在执行时加快运动速度。
+     * 其中每个时间间隔是剩余距离减去一个固定比例部分。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static expoIn(t, b, c, d) {
+        return t == 0 ? b : c * Math.pow(2, 10 * (t / d - 1)) + b - c * 0.001;
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * 其中每个时间间隔是剩余距离减去一个固定比例部分。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static expoInOut(t, b, c, d) {
+        if (t == 0)
+            return b;
+        if (t == d)
+            return b + c;
+        if ((t /= d * 0.5) < 1)
+            return c * 0.5 * Math.pow(2, 10 * (t - 1)) + b;
+        return c * 0.5 * (-Math.pow(2, -10 * --t) + 2) + b;
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * 其中每个时间间隔是剩余距离减去一个固定比例部分。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static expoOut(t, b, c, d) {
+        return t == d ? b + c : c * (-Math.pow(2, (-10 * t) / d) + 1) + b;
+    }
+    /**
+     * 方法以零速率开始运动，然后在执行时加快运动速度。
+     * 缓动方程的运动加速会产生突然的速率变化。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static circIn(t, b, c, d) {
+        return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
+    }
+    /**
+     * 开始运动时速率为零，先对运动进行加速，再减速直到速率为零。
+     * 缓动方程的运动加速会产生突然的速率变化。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static circInOut(t, b, c, d) {
+        if ((t /= d * 0.5) < 1)
+            return -c * 0.5 * (Math.sqrt(1 - t * t) - 1) + b;
+        return c * 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
+    }
+    /**
+     * 以较快速度开始运动，然后在执行时减慢运动速度，直至速率为零。
+     * 缓动方程的运动加速会产生突然的速率变化。
+     * @param	t 指定当前时间，介于 0 和持续时间之间（包括二者）。
+     * @param	b 指定动画属性的初始值。
+     * @param	c 指定动画属性的更改总计。
+     * @param	d 指定运动的持续时间。
+     * @return 指定时间的插补属性的值。
+     */
+    static circOut(t, b, c, d) {
+        return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;
+    }
+}
+/**@private */
+Ease.HALF_PI = Math.PI * 0.5;
+/**@private */
+Ease.PI2 = Math.PI * 2;
+
+class Tween {
+    constructor(target) {
+        /** 缓动对象 */
+        this.target = null;
+        /** 缓动开始时的节点属性 */
+        this.fromProps = null;
+        /** 缓动节点的目标属性 */
+        this.toProps = null;
+        /** 缓动的持续时长，毫秒 */
+        this.duration = 1000;
+        /** 缓动延迟时间 */
+        this.delay = 0;
+        /** 缓动是否暂停 */
+        this.paused = false;
+        /** 缓动是否反复执行 */
+        this.reverse = false;
+        /** 重播次数，如果 loop=0，则表示无限循环播放 */
+        this.loop = 1;
+        /** 循环时需要延迟的时长，毫秒 */
+        this.loopDelay = 0;
+        /** 缓动函数 */
+        this.ease = Ease.linearNone;
+        /** 当前时间，位于 0 和 duration 之间 */
+        this.time = 0;
+        /** 缓动开始时间戳 */
+        this._startTime = 0;
+        /** 缓动跳到的时间，值为 0 到 duration 区间 */
+        this._seekTime = 0;
+        /** 缓动暂停时间戳 */
+        this._pausedTime = 0;
+        /** 缓动暂停后开始的时间戳 */
+        this._pausedStartTime = 0;
+        /** 反复播放的方向标识 */
+        this._reverseFlag = 1;
+        /** 已经循环的次数 */
+        this._loopCount = 0;
+        /** 是否已经开始缓动 */
+        this._isStart = false;
+        /** 是否已完成缓动动画 */
+        this._isComplete = false;
+        /** 缓存是否循环 */
+        this._isLoop = false;
+        this.target = target;
+        // 记录当前节点的缓动属性值
+        this.fromProps = {
+            x: target.x,
+            y: target.y,
+            scaleX: target.scaleX,
+            scaleY: target.scaleY,
+            opacity: target.opacity,
+            rotation: target.rotation,
+        };
+    }
+    /**
+     * 添加节点的缓动实例
+     * @param target 节点对象
+     * @param coverBefore 是否覆盖该节点之前未完成的缓动实例
+     * @returns 缓动实例
+     */
+    static add(target, coverBefore = false) {
+        const tween = new Tween(target);
+        const gid = target.$_GID || (target.$_GID = Utils.getGID());
+        if (!Tween.tweenMap[gid]) {
+            Tween.tweenMap[gid] = [tween];
+        }
+        else {
+            if (coverBefore)
+                Tween.clear(target);
+            Tween.tweenMap[gid].push(tween);
+        }
+        return tween;
+    }
+    /**
+     * 清楚缓动
+     * @param target 目标节点或缓动实例
+     * @returns
+     */
+    static clear(target) {
+        let node = target, clearTargetAll = true;
+        if (target instanceof Tween) {
+            node = target.target;
+            clearTargetAll = false;
+        }
+        const gid = node.$_GID;
+        const tweenList = Tween.tweenMap[gid];
+        if (tweenList && tweenList.length > 0) {
+            if (clearTargetAll) {
+                tweenList.length = 0;
+            }
+            else {
+                const i = tweenList.indexOf(target);
+                if (i > -1)
+                    tweenList.splice(i, 1);
+            }
+        }
+        return Tween;
+    }
+    /**
+     * 清空所有的 Tween 实例
+     * @returns
+     */
+    static clearAll() {
+        Tween.tweenMap = {};
+        return Tween;
+    }
+    /**
+     * 帧更新所有的 Tween 实例
+     */
+    static tick() {
+        // console.log('更新Tween')
+        // const tweenList = Tween.tweenList, len = tweenList.length
+        // let tween, i
+        // for (i = 0; i < len; i++) {
+        //   tween = tweenList[i]
+        //   if (tween && tween.tick(Browser.now)) {
+        //     tweenList.splice(i, 1)
+        //     i--
+        //   }
+        // }
+        // return Tween
+    }
+    to(toProps, params) {
+        this.toProps = Object.assign({}, toProps);
+        for (const key in params) {
+            this[key] = params[key];
+        }
+    }
+    tick(now) {
+        // 判断是否暂停了
+        if (this.paused)
+            return false;
+        // 判断是否已完成缓动
+        if (this._isComplete)
+            return true;
+        // 判断是否还剩余时间进行缓动，是否循环，是否反复
+        const elapsedTime = now - this._startTime - this._pausedTime + this._seekTime;
+        if (elapsedTime < 0)
+            return false;
+        let ratio = this.ease(this._startTime, 0, 1, this.duration);
+        ratio = ratio < 0 ? 0 : ratio >= 1 ? 1 : ratio;
+        if (this.reverse && this._isStart) {
+            // 回放
+            if (this._reverseFlag < 0) {
+                ratio = 1 - ratio;
+            }
+            // 继续播放
+            if (ratio < 1e-7) {
+                if ((this.loop > 0 && this._loopCount++ >= this.loop) || (this.loop === 0 && !this._isLoop)) {
+                    this._isComplete = true;
+                }
+                else {
+                    this._startTime = Browser.now;
+                    this._pausedTime = 0;
+                    this._reverseFlag *= -1;
+                }
+            }
+        }
+        if (!this._isStart) {
+            this._isStart = true;
+            if (this.onStart)
+                this.onStart.callback.call(this, this);
+        }
+        this.time = elapsedTime;
+        this._render(ratio);
+        if (this.onUpdate)
+            this.onUpdate.callback.call(this, ratio, this);
+        if (ratio >= 1) {
+            if (this.reverse) {
+                this._startTime = Browser.now;
+                this._pausedTime = 0;
+                this._reverseFlag *= -1;
+            }
+            else if (this._isLoop || this.loop > 0 && this._loopCount++ < this.loop) {
+                this._startTime = Browser.now * this.loopDelay;
+                this._pausedTime = 0;
+            }
+            else {
+                this._isComplete = true;
+            }
+        }
+        return true;
+    }
+    _render(ratio) {
+        const target = this.target, fromProps = this.fromProps;
+        for (const key in fromProps) {
+            target[key] = fromProps[key] + (this.toProps[key] - this.fromProps[key]) * ratio;
+        }
+    }
+}
+Tween.tweenMap = {};
+
 class Tyro2d {
     /**
      * 开始游戏
@@ -1934,6 +2694,7 @@ class Tyro2d {
         Tyro2d.stage = stage;
         Tyro2d.ticker = new Ticker(fps);
         Tyro2d.ticker.addTick(stage);
+        Tyro2d.ticker.addTick(Tween);
         Tyro2d.ticker.start();
     }
     /**
@@ -1959,6 +2720,7 @@ class Tyro2d {
      */
     static destroy() {
         Tyro2d.stage.destroy();
+        Tyro2d.Tween.clearAll();
         Tyro2d.eventBus.destroy();
         Tyro2d.ticker.stop();
         Tyro2d.ticker.clear();
@@ -1967,5 +2729,6 @@ class Tyro2d {
     }
 }
 Tyro2d.Event = Event;
+Tyro2d.Tween = Tween;
 
-export { Event$1 as Event, EventDispatcher, MathTool, Node, Sprite, Stage, Ticker, Tyro2d, Utils, Vector2d };
+export { Event$1 as Event, EventDispatcher, MathTool, Node, Sprite, Stage, Tyro2d, Utils, Vector2d };

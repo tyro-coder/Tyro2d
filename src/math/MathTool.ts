@@ -8,7 +8,7 @@ export default class MathTool {
    * @param angle 角度
    * @returns 
    */
-  static degToRed(angle: number): number {
+  static degToRad(angle: number): number {
     return angle * MathTool.DEG_TO_RAD;
   }
 

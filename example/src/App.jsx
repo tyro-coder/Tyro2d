@@ -1,6 +1,6 @@
 import './App.css'
 import { useEffect, useRef } from 'react'
-import { Tyro2d, Stage, Sprite } from '../tyro2d'
+import { Tyro2d, Stage, Sprite, Node } from '../tyro2d'
 
 function App() {
   const gameRef = useRef()
@@ -20,24 +20,25 @@ function App() {
     )
     Tyro2d.start(stage, 30)
 
-    console.log(stage)
-
     const bookSprite = new Sprite('//yun.dui88.com/cdfe/liaoningBOC-kanjia/shareIcon.png')
-    bookSprite.x = 143
-    bookSprite.y = 143
-    // bookSprite.rotation = 15
-    bookSprite.scaleX = 2
-    bookSprite.scaleY = 2
-    bookSprite.anchorX = 71
-    bookSprite.anchorY = 71
+    bookSprite.x = 71
+    bookSprite.y = 71
+    bookSprite.setScale(2, 2)
+    bookSprite.anchorX = 0.5
+    bookSprite.anchorY = 0.5
+    bookSprite.rotation = 45
     stage.addChild(bookSprite)
 
-    const newSprite = new Sprite('//yun.dui88.com/cdfe/liaoningBOC-kanjia/shareIcon.png')
-    newSprite.x = 0
-    newSprite.y = 0
-    bookSprite.addChild(newSprite)
+    const container = new Node()
+    stage.addChild(container)
 
-    console.log(bookSprite.transform.matrix)
+    const sprite = new Sprite('//yun.dui88.com/cdfe/liaoningBOC-kanjia/shareIcon.png')
+    sprite.anchorX = 0
+    sprite.anchorY = 1
+    sprite.x = 0
+    sprite.y = 143
+    sprite.rotation = 15
+    container.addChild(sprite)
   }, [])
 
   return (

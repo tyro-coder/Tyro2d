@@ -1,6 +1,7 @@
 import { RENDER_TYPE } from './../utils/Constants';
 import Renderer from "./Renderer";
 import Node from '../display/Node'
+import { MathTool } from '../index';
 
 export default class CanvasRenderer extends Renderer {
   renderType: RENDER_TYPE = RENDER_TYPE.CANVAS
@@ -17,37 +18,25 @@ export default class CanvasRenderer extends Renderer {
 
   startDraw(target: Node): boolean {
     if (target.visible && target.opacity > 0) {
+      const ctx = this.context
       if (target.blendMode !== this.blendMode) {
-        this.context.globalCompositeOperation = this.blendMode = target.blendMode
+        ctx.globalCompositeOperation = this.blendMode = target.blendMode
       }
-      this.context.save()
+      ctx.save()
+
+      // 在绘图前将旋转的中心点先找出来
+      const { anchorX, anchorY, rotation, width, height, scaleX, scaleY } = target.transform
+      if (rotation !== 0) {
+        const anchorWidth = anchorX * width * scaleX
+        const anchorHeight = anchorY * height * scaleY
+        ctx.translate(anchorWidth, anchorHeight)
+        ctx.rotate(MathTool.degToRad(rotation))
+        ctx.translate(-anchorWidth, -anchorHeight)
+      }
+
       return true
     }
     return false
-  }
-
-  draw(target: Node): void {
-    // const ctx = this.context,
-    //   w = target.width,
-    //   h = target.height
-
-    // // 绘制舞台背景颜色
-    // if (target instanceof Stage) {
-    //   const bg = target.background
-    //   if (bg) {
-    //     ctx.fillStyle = bg
-    //     ctx.fillRect(0, 0, w, h)
-    //   }
-    // }
-
-    // // if (target instanceof Sprite) {
-    // //   const texture = target.texture
-    // //   const img = texture.image, imgW = texture.width, imgH = texture.height
-
-    // //   if (!img || !imgW || !imgH) return
-
-    // //   ctx.drawImage(img, target.x, target.y, imgW, imgH)
-    // // }
   }
 
   endDraw(target: Node): void {

@@ -1,12 +1,14 @@
 import EventDispatcher from './event/EventDispatcher'
 import Stage from './display/Stage'
 import Ticker from './utils/Ticker'
+import Tween from './tween/Tween'
 
 export default class Tyro2d {
   static Event = Event
   static stage: Stage
   static ticker: Ticker
   static eventBus: EventDispatcher
+  static Tween = Tween
 
   /**
    * 开始游戏
@@ -20,6 +22,7 @@ export default class Tyro2d {
     Tyro2d.stage = stage
     Tyro2d.ticker = new Ticker(fps)
     Tyro2d.ticker.addTick(stage)
+    Tyro2d.ticker.addTick(Tween)
 
     Tyro2d.ticker.start()
   }
@@ -50,6 +53,7 @@ export default class Tyro2d {
    */
   static destroy() {
     Tyro2d.stage.destroy()
+    Tyro2d.Tween.clearAll()
     Tyro2d.eventBus.destroy()
     Tyro2d.ticker.stop()
     Tyro2d.ticker.clear()

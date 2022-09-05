@@ -95,7 +95,7 @@ export default class Matrix2d extends HashObject {
    * @returns 当前矩阵
    */
   rotate(angle: number): Matrix2d {
-    const red = MathTool.degToRed(angle)
+    const red = MathTool.degToRad(angle)
     const sin = Math.sin(red), cos = Math.cos(red);
     const a = this.a, b = this.b, c = this.c, d = this.d, dx = this.dx, dy = this.dy;
 
@@ -116,9 +116,9 @@ export default class Matrix2d extends HashObject {
    */
   scale(sx: number, sy: number): Matrix2d {
     this.a *= sx;
-    this.d *= sy;
-    this.c *= sx;
-    this.b *= sy;
+		this.b *= sx;
+		this.c *= sy;
+		this.d *= sy;
     return this;
   }
 

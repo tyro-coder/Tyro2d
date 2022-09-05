@@ -1,4 +1,5 @@
 import EventDispatcher from "../event/EventDispatcher";
+import Matrix2d from "../math/Matrix2d";
 import Transform2d from "../math/Transform2d";
 import Renderer from "../renderer/Renderer";
 import { RENDER_TYPE } from "../utils/Constants";
@@ -26,8 +27,7 @@ export default class Node extends EventDispatcher {
   protected _instanceType: string = 'Node'
   protected _width: number = 0
   protected _height: number = 0
-  protected _anchorX: number = 0
-  protected _anchorY: number = 0
+
   private _opacity: number = 1
   private _destroyed: boolean = false
   private _parent: Node | null = null
@@ -91,6 +91,7 @@ export default class Node extends EventDispatcher {
   set width(val: number) {
     if (this._width !== val) {
       this._width = val
+      this._transform.width = val
     }
   }
 
@@ -101,6 +102,7 @@ export default class Node extends EventDispatcher {
   set height(val: number) {
     if (this._height !== val) {
       this._height = val
+      this._transform.height = val
     }
   }
 
@@ -111,6 +113,7 @@ export default class Node extends EventDispatcher {
   set scaleX(val: number) {
     if (this.scaleX !== val) {
       this._transform.scaleX = val
+      this.width *= (val / this.scaleX)
     }
   }
 
@@ -121,6 +124,7 @@ export default class Node extends EventDispatcher {
   set scaleY(val: number) {
     if (this.scaleY !== val) {
       this._transform.scaleY = val
+      this.height *= (val / this.scaleY)
     }
   }
 
@@ -429,6 +433,21 @@ export default class Node extends EventDispatcher {
       childTemp = child.parent
     }
     return false
+  }
+
+  /**
+   * 获取串联的矩阵信息
+   * @param ancestor 祖先节点
+   * @returns 
+   */
+  getConcatenatedMatrix(ancestor: Node): Matrix2d {
+    const mtx = new Matrix2d()
+
+    for (let o: Node = this; o !== ancestor && o.parent; o = o.parent) {
+      mtx.concat(o.transform.matrix)
+    }
+
+    return mtx
   }
 
   /**
