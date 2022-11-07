@@ -13,6 +13,6 @@ export interface IViewPort {
 /**
  * 定时器对象
  */
- export interface ITickerHandler {
+export interface ITickerHandler {
   tick: (dt: number) => void;
 }

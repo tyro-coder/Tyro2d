@@ -18,6 +18,7 @@
     "declaration": true,
     "declarationDir": "types",
     "outDir": "dist",
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*"

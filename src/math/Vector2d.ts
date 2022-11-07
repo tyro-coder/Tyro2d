@@ -13,9 +13,9 @@ export default class Vector2d extends HashObject {
 
   protected _instanceType: string = 'Vector2d'
 
-  constructor() {
+  constructor(x?: number, y?: number) {
     super()
-    this.reset();
+    this.reset(x, y);
   }
 
   /**
@@ -35,9 +35,9 @@ export default class Vector2d extends HashObject {
     Pool.recover('Vector2d', this.reset());
   }
 
-  reset(): Vector2d {
-    this.x = 0;
-    this.y = 0;
+  reset(x: number = 0, y: number = 0): Vector2d {
+    this.x = x;
+    this.y = y;
     return this;
   }
 
