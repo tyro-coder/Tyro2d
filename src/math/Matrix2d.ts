@@ -25,7 +25,7 @@ export default class Matrix2d extends HashObject {
 
   constructor(a: number = 1, b: number = 0, c: number = 0 , d: number = 1, dx: number = 0, dy: number = 0) {
     super()
-    this.set(a, b, c, d, dx, dy)
+    this.reset(a, b, c, d, dx, dy)
   }
 
   /**
@@ -38,7 +38,7 @@ export default class Matrix2d extends HashObject {
    * @param dy 
    * @returns 
    */
-  set(a: number = 1, b: number = 0, c: number = 0, d: number = 1, dx: number = 0, dy: number = 0): Matrix2d {
+  reset(a: number = 1, b: number = 0, c: number = 0, d: number = 1, dx: number = 0, dy: number = 0): Matrix2d {
     this.a = a
     this.b = b
     this.c = c
@@ -46,6 +46,15 @@ export default class Matrix2d extends HashObject {
     this.dx = dx
     this.dy = dy
     return this
+  }
+
+  clear() {
+    this.a = 1
+    this.b = 0
+    this.c = 0
+    this.d = 1
+    this.dx = 0
+    this.dy = 0
   }
 
   /**

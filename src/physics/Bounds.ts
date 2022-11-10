@@ -1,21 +1,35 @@
 import Point from "../geometries/Point";
-import Matrix2d from "../math/Matrix2d";
+import { Vector2d } from "../index";
 import HashObject from "../utils/HashObject";
+import Pool, { POOL_SIGN } from "../utils/Pool";
 
 export default class Bounds extends HashObject {
+  static EMPTY: Bounds = new Bounds();
+
   minPoint: Point
   maxPoint: Point
 
-  constructor() {
+  constructor(verticeList?: Array<Vector2d>) {
     super()
+
+    this.reset(verticeList)
   }
 
-  reset() {
-
+  reset(verticeList?: Array<Vector2d>) {
+    if (this.minPoint === undefined) {
+      this.minPoint = Pool.getInstanceByClass(POOL_SIGN.Point, Point).reset(Infinity, Infinity)
+      this.maxPoint = Pool.getInstanceByClass(POOL_SIGN.Point, Point).reset(-Infinity, -Infinity)
+    } else {
+      this.clear()
+    }
+    if (typeof verticeList !== 'undefined') {
+      this.update(verticeList)
+    }
   }
 
   clear() {
-
+    this.minPoint.reset(Infinity, Infinity)
+    this.maxPoint.reset(-Infinity, -Infinity)
   }
 
   get x() {
@@ -90,6 +104,41 @@ export default class Bounds extends HashObject {
     this.maxPoint.x = Math.max(this.maxPoint.x, point.x)
     this.minPoint.y = Math.min(this.minPoint.y, point.y)
     this.maxPoint.y = Math.max(this.maxPoint.y, point.y)
+  }
+
+  /**
+   * 根据多边形的顶点向量集合，生成新的包围盒
+   * @param verticeList 多边形的顶点向量集合
+   */
+  update(verticeList: Array<Vector2d>) {
+    this.clear()
+    for (let i = 0; i < verticeList.length; i++) {
+      const vertex = verticeList[i]
+      if (vertex.x > this.maxPoint.x) this.maxPoint.x = vertex.x;
+      if (vertex.x < this.minPoint.x) this.minPoint.x = vertex.x;
+      if (vertex.y > this.maxPoint.y) this.maxPoint.y = vertex.y;
+      if (vertex.y < this.minPoint.y) this.minPoint.y = vertex.y;
+    }
+  }
+
+  /**
+   * 包围盒偏移
+   * @param x x轴偏移量
+   * @param y y轴偏移量
+   */
+  translate(x: number, y: number) {
+    this.minPoint.x += x
+    this.maxPoint.x += x
+    this.minPoint.y += y
+    this.maxPoint.y += y
+  }
+
+  /**
+   * 根据二维向量进行偏移
+   * @param v 参考的二维向量
+   */
+  translateByVector(v: Vector2d) {
+    this.translate(v.x, v.y)
   }
 
   destroy(): void {}
