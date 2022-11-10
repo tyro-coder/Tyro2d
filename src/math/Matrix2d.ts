@@ -1,4 +1,5 @@
 import HashObject from "../utils/HashObject";
+import Pool, { POOL_SIGN } from "../utils/Pool";
 import MathTool from './MathTool'
 
 /**
@@ -8,6 +9,8 @@ import MathTool from './MathTool'
  *  0 0 1
  */
 export default class Matrix2d extends HashObject {
+  static EMPTY: Matrix2d = new Matrix2d()
+
   /** 缩放或旋转图像时，影响像素沿 x 轴定位的值 */
   a: number
   /** 倾斜或旋转图像时，影响像素沿 y 轴定位的值 */
@@ -55,6 +58,12 @@ export default class Matrix2d extends HashObject {
     this.d = 1
     this.dx = 0
     this.dy = 0
+  }
+
+  recover() {
+    if (this === Matrix2d.EMPTY) return
+    this.clear()
+    Pool.recover(POOL_SIGN.Matrix2d, this)
   }
 
   /**

@@ -19,8 +19,6 @@ export default class Bounds extends HashObject {
     if (this.minPoint === undefined) {
       this.minPoint = Pool.getInstanceByClass(POOL_SIGN.Point, Point).reset(Infinity, Infinity)
       this.maxPoint = Pool.getInstanceByClass(POOL_SIGN.Point, Point).reset(-Infinity, -Infinity)
-    } else {
-      this.clear()
     }
     if (typeof verticeList !== 'undefined') {
       this.update(verticeList)
@@ -30,6 +28,12 @@ export default class Bounds extends HashObject {
   clear() {
     this.minPoint.reset(Infinity, Infinity)
     this.maxPoint.reset(-Infinity, -Infinity)
+  }
+
+  recover() {
+    if (this === Bounds.EMPTY) return
+    this.clear()
+    Pool.recover(POOL_SIGN.Bounds, this)
   }
 
   get x() {

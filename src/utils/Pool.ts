@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface IPoolDic {
   [key: string]: any[]
 }
@@ -7,6 +8,7 @@ export enum POOL_SIGN {
   Bounds = 'Bounds',
   Polygon = 'Polygon',
   Vector2d = 'Vector2d',
+  Matrix2d = 'Matrix2d',
 }
 
 

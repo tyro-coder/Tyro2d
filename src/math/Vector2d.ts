@@ -1,5 +1,5 @@
 import HashObject from '../utils/HashObject';
-import Pool from '../utils/Pool';
+import Pool, { POOL_SIGN } from '../utils/Pool';
 import MathTool from './MathTool';
 
 export default class Vector2d extends HashObject {
@@ -23,7 +23,18 @@ export default class Vector2d extends HashObject {
    * @returns Vector2d对象
    */
   static create(): Vector2d {
-    return Pool.getInstanceByClass('Vector2d', Vector2d)
+    return Pool.getInstanceByClass(POOL_SIGN.Vector2d, Vector2d)
+  }
+
+  reset(x: number = 0, y: number = 0): Vector2d {
+    this.x = x;
+    this.y = y;
+    return this;
+  }
+
+  clear() {
+    this.x = 0
+    this.y = 0
   }
 
   /**
@@ -32,13 +43,8 @@ export default class Vector2d extends HashObject {
    */
   recover(): void {
     if (this === Vector2d.EMPTY) return;
-    Pool.recover('Vector2d', this.reset());
-  }
-
-  reset(x: number = 0, y: number = 0): Vector2d {
-    this.x = x;
-    this.y = y;
-    return this;
+    this.clear()
+    Pool.recover(POOL_SIGN.Vector2d, this);
   }
 
   set(x: number, y: number): Vector2d {

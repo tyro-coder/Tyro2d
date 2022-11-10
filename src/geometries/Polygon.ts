@@ -4,6 +4,8 @@ import HashObject from "../utils/HashObject";
 import Pool, { POOL_SIGN } from "../utils/Pool";
 
 export default class Polygon extends HashObject {
+  static EMPTY: Polygon = new Polygon(0, 0, Vector2d.EMPTY, Vector2d.EMPTY, Vector2d.EMPTY)
+
   protected _instanceType: string = 'Polygon'
 
   /** 多边形类型 */
@@ -31,7 +33,7 @@ export default class Polygon extends HashObject {
     this.reset(x, y, ...points)
   }
 
-  reset(x: number, y: number, ...points: Array<Vector2d>) {
+  reset(x: number, y: number, ...points: Array<Vector2d>): Polygon {
     this.position.set(x, y)
     this.setVerticeList(points)
     return this
@@ -43,6 +45,11 @@ export default class Polygon extends HashObject {
     this.edgeList = []
     this.normalList = []
     this._bounds = Bounds.EMPTY
+  }
+
+  recover() {
+    if (this === Polygon.EMPTY) return
+    this.clear()
     Pool.recover(POOL_SIGN.Polygon, this)
   }
 

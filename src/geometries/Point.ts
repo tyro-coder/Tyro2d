@@ -1,6 +1,9 @@
 import HashObject from "../utils/HashObject";
+import Pool, { POOL_SIGN } from "../utils/Pool";
 
 export default class Point extends HashObject {
+  static EMPTY: Point = new Point()
+
   protected _instanceType: string = 'Point'
   /** x值 */
   x = 0
@@ -24,8 +27,14 @@ export default class Point extends HashObject {
     this.y = 0
   }
 
-  clone() {
-    return new Point(this.x, this.y)
+  recover() {
+    if (this === Point.EMPTY) return
+    this.clear()
+    Pool.recover(POOL_SIGN.Point, this)
+  }
+
+  clone(): Point {
+    return Pool.getInstanceByClass(POOL_SIGN.Point, Point).reset(this.x, this.y)
   }
 
   /**
