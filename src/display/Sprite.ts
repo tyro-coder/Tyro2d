@@ -1,3 +1,4 @@
+import { HASH_OBJECT_TYPE } from './../config/constants';
 import Texture from "../media/Texture"
 import Renderer from "../renderer/Renderer"
 import Node from "./Node"
@@ -5,7 +6,7 @@ import Node from "./Node"
 export default class Sprite extends Node {
   private _texture: Texture
 
-  protected _instanceType: string = 'Sprite'
+  protected _instanceType: string = HASH_OBJECT_TYPE.Sprite
 
   constructor(src?: string) {
     super()
@@ -23,28 +24,5 @@ export default class Sprite extends Node {
     this._texture = tex as Texture
     this.width = this._texture.width
     this.height = this._texture.height
-  }
-
-  protected _renderCanvas(renderer: Renderer, delta: number) {
-    const ctx = renderer.context
-    const texture = this.texture
-    const img = texture.image
-    this.width = texture.width, this.height = texture.height
-
-    if (img && this.width && this.height && texture.loaded) {
-      ctx.drawImage(
-        img,
-        0,
-        0,
-        this.width,
-        this.height,
-      )
-    }
-
-    super._renderCanvas(renderer, delta)
-  }
-
-  protected _renderWebGL(renderer: Renderer, delta: number) {
-    throw new Error('暂未支持 WebGL 方式渲染 Sprite')
   }
 }

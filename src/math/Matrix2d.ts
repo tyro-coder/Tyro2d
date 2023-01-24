@@ -1,6 +1,7 @@
 import HashObject from "../utils/HashObject";
 import Pool, { POOL_SIGN } from "../utils/Pool";
 import MathTool from './MathTool'
+import Vector2d from "./Vector2d";
 
 /**
  * 2d矩阵类

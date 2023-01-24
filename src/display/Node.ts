@@ -1,45 +1,68 @@
+import { HASH_OBJECT_TYPE } from './../config/constants';
 import EventDispatcher from "../event/EventDispatcher";
 import Matrix2d from "../math/Matrix2d";
-import Transform2d from "../math/Transform2d";
 import Renderer from "../renderer/Renderer";
-import { RENDER_TYPE } from "../utils/Constants";
+import { MathTool, Vector2d } from '../index';
+import Bounds from '../physics/Bounds';
 
 /**
- * Node 节点，所有游戏内元素的基类
+ * Node 节点，所有游戏内可视元素的基类
  */
 export default class Node extends EventDispatcher {
-  /**@private */
-  protected static ARRAY_EMPTY: Node[] = []
+  /** 空节点数组 */
+  static ARRAY_EMPTY: Node[] = []
+
   public $_GID: number
+  /** 节点的背景颜色 */
+  public background: string | CanvasGradient | CanvasPattern = ''
   /** 节点是否可见，默认为true */
   public visible: boolean = true
   /** 节点的名字 */
   public name: string
-  /** 节点是否可接受交互事件 */
+  /** 节点是否可接受鼠标或触控交互事件 */
   public mouseEnable: boolean = true
   /** 是否裁剪超出容器范围的子元素，默认 false */
   public clipChildren: boolean = false
   /** 节点的渲染方式 */
   public blendMode: GlobalCompositeOperation = 'source-over'
-  /** 节点的渲染方法 */
-  public render: (renderer: Renderer, delta: number) => void
 
-  protected _instanceType: string = 'Node'
+  /** 节点实例类型 */
+  protected _instanceType: string = HASH_OBJECT_TYPE.Node
+  /** 节点x轴位置 */
+  protected _x: number = 0
+  /** 节点y轴位置 */
+  protected _y: number = 0
+  /** 节点宽度 */
   protected _width: number = 0
+  /** 节点高度 */
   protected _height: number = 0
-
-  private _opacity: number = 1
-  private _destroyed: boolean = false
-  private _parent: Node | null = null
+  /** 节点旋转角度 */
+  protected _rotation: number = 0
+  /** 节点x轴缩放比例 */
+  protected _scaleX: number = 1
+  /** 节点y轴缩放比例 */
+  protected _scaleY: number = 1
+  /** 节点x轴锚点 */
+  protected _anchorX: number = 0
+  /** 节点y轴锚点 */
+  protected _anchorY: number = 0
+  /** 节点透明度，0~1 */
+  protected _opacity: number = 1
+  /** 节点深度 */
+  protected _zIndex: number = 0
+  /** 节点是否已销毁 */
+  protected _destroyed: boolean = false
+  /** 父节点 */
+  protected _parent: Node | null = null
   /** 节点的变换实例 */
-  private _transform: Transform2d
-  /**@internal 子对象集合 */
-  private _children: Node[] = Node.ARRAY_EMPTY
+  protected _transform: Matrix2d
+  /** 子对象集合 */
+  protected _children: Node[] = Node.ARRAY_EMPTY
 
   constructor() {
     super()
 
-    this._transform = new Transform2d()
+    this._transform = Matrix2d.EMPTY
   }
 
   /** 透明度 */
@@ -51,27 +74,24 @@ export default class Node extends EventDispatcher {
       this._opacity = val
     }
   }
-
   /** 相对父容器的x轴偏移量 */
   get x(): number {
-    return this._transform.x
+    return this._x
   }
   set x(val: number) {
-    if (this.x !== val) {
-      this._transform.x = val
+    if (this._x !== val) {
+      this._x = val
     }
   }
-
   /** 相对父容器的y轴偏移量 */
   get y(): number {
-    return this._transform.y
+    return this._y
   }
   set y(val: number) {
-    if (this.y !== val) {
-      this._transform.y = val
+    if (this._y !== val) {
+      this._y = val
     }
   }
-
   /**
    * 设置位置
    * @param x x轴相对父容器偏移量
@@ -83,7 +103,6 @@ export default class Node extends EventDispatcher {
     this.y = y
     return this
   }
-
   /** 节点的宽 */
   get width(): number {
     return this._width
@@ -91,10 +110,8 @@ export default class Node extends EventDispatcher {
   set width(val: number) {
     if (this._width !== val) {
       this._width = val
-      this._transform.width = val
     }
   }
-
   /** 节点的高 */
   get height(): number {
     return this._height
@@ -102,32 +119,26 @@ export default class Node extends EventDispatcher {
   set height(val: number) {
     if (this._height !== val) {
       this._height = val
-      this._transform.height = val
     }
   }
-
   /** x轴缩放 */
   get scaleX(): number {
-    return this._transform.scaleX
+    return this._scaleX
   }
   set scaleX(val: number) {
     if (this.scaleX !== val) {
-      this._transform.scaleX = val
-      this.width *= (val / this.scaleX)
+      this._scaleX = val
     }
   }
-
   /** y轴缩放值 */
   get scaleY(): number {
-    return this._transform.scaleY
+    return this._scaleY
   }
   set scaleY(val: number) {
     if (this.scaleY !== val) {
-      this._transform.scaleY = val
-      this.height *= (val / this.scaleY)
+      this._scaleY = val
     }
   }
-
   /**
    * 设置缩放量
    * @param x x轴缩放倍数
@@ -139,41 +150,37 @@ export default class Node extends EventDispatcher {
     this.scaleY = y
     return this
   }
-
   /** 旋转角度 */
   get rotation(): number {
-    return this._transform.rotation
+    return this._rotation
   }
   set rotation(val: number) {
     if (this.rotation !== val) {
-      this._transform.rotation = val
+      this._rotation = val
     }
   }
-
-  get transform(): Transform2d {
+  /** 变换矩阵 */
+  get transform(): Matrix2d {
     return this._transform
   }
-
   /** x轴锚点 */
   get anchorX(): number {
-    return this._transform.anchorX
+    return this._anchorX;
   }
   set anchorX(val: number) {
     if (this.anchorX !== val) {
-      this._transform.anchorX = val
+      this._anchorY = val
     }
   }
-
   /** y轴锚点 */
   get anchorY(): number {
-    return this._transform.anchorY
+    return this._anchorY
   }
   set anchorY(val: number) {
     if (this.anchorY !== val) {
-      this._transform.anchorY = val
+      this._anchorY = val
     }
   }
-
   /**
    * 设置锚点
    * @param x x轴锚点位置
@@ -185,7 +192,6 @@ export default class Node extends EventDispatcher {
     this.anchorY = y
     return this
   }
-
   /** 是否销毁 */
   get destroyed(): boolean {
     return this._destroyed
@@ -195,7 +201,6 @@ export default class Node extends EventDispatcher {
       this._destroyed = val
     }
   }
-
   /** 父节点 */
   get parent(): Node | null {
     return this._parent
@@ -205,19 +210,19 @@ export default class Node extends EventDispatcher {
       this._parent = p
     }
   }
-
   /** 子节点数组 */
   get children(): Node[] {
     return this._children
   }
-
   /** 字节点数目 */
   get childrenNum(): number {
     return this._children.length
   }
 
+  /** 销毁方法 */
   destroy(): void {
-
+    // TODO: 节点销毁
+    this.destroyed = true
   }
 
   /**
@@ -227,6 +232,18 @@ export default class Node extends EventDispatcher {
    */
   onUpdate(delta: number): boolean {
     return true
+  }
+
+  /**
+   * 将节点添加到某个父节点上
+   * @param parent 父节点
+   * @param index 可选，是否指定位置
+   * @returns 当前节点
+   */
+  addTo(parent: Node, index?: number): Node {
+    if (typeof index === 'number') parent.addChildAt(this, index)
+    else parent.addChild(this)
+    return this;
   }
 
   /**
@@ -252,7 +269,6 @@ export default class Node extends EventDispatcher {
     }
     return child
   }
-
   /**
    * 添加子节点到指定的索引位置
    * @param child 节点对象
@@ -278,12 +294,11 @@ export default class Node extends EventDispatcher {
       throw new Error('addChildAt: The index is out of bounds')
     }
   }
-
   /**
    * 批量增加子节点
    * @param ...args 无数子节点
    */
-  addChildren(...args: any[]): void {
+  addChildren(...args: Node[]): void {
     let i: number = 0
     const n: number = args.length;
     while (i < n) {
@@ -306,7 +321,7 @@ export default class Node extends EventDispatcher {
    * @returns 节点对象
    */
   getChildByName(name: string): Node | null {
-    const children: any[] = this._children
+    const children: Node[] = this._children
     if (children) {
       for (let i: number = 0, n: number = children.length; i < n; i++) {
         const child: Node = children[i]
@@ -333,7 +348,7 @@ export default class Node extends EventDispatcher {
    * @returns 返回子节点本身
    */
   setChildIndex(child: Node, index: number): Node {
-    const childs: any[] = this._children
+    const childs: Node[] = this._children
     if (index < 0 || index >= childs.length) {
       throw new Error('setChildIndex: The index is out of bounds.')
     }
@@ -420,6 +435,13 @@ export default class Node extends EventDispatcher {
     return null
   }
 
+    /**
+   * 子节点发生改变
+   * @param child 子节点
+   */
+    protected _childChanged(child: Node = null) {
+    }
+
   /**
    * 当前容器内是否包含指定的子节点对象
    * @param child 子节点对象
@@ -440,14 +462,54 @@ export default class Node extends EventDispatcher {
    * @param ancestor 祖先节点
    * @returns 
    */
-  getConcatenatedMatrix(ancestor: Node): Matrix2d {
+  getConcatenatedMatrix(ancestor: Node | null = null): Matrix2d {
     const mtx = new Matrix2d()
 
     for (let o: Node = this; o !== ancestor && o.parent; o = o.parent) {
-      mtx.concat(o.transform.matrix)
+      let cos = 1, sin = 0;
+      const rotation = o.rotation % 360,
+        anchorX = o.anchorX,
+        anchorY = o.anchorY,
+        scaleX = o.scaleX,
+        scaleY = o.scaleY,
+        transform = o.transform;
+      
+        if (transform !== Matrix2d.EMPTY) {
+          mtx.concat(transform)
+        } else {
+          if (rotation) {
+            const r = rotation * MathTool.DEG_TO_RAD;
+            cos = Math.cos(r)
+            sin = Math.sin(r)
+          }
+
+          if (anchorX !== 0) mtx.dx -= anchorX
+          if (anchorY !== 0) mtx.dy -= anchorY
+
+          // TODO: 后续有对齐方案的话，加在这里
+
+          mtx.concat(new Matrix2d(cos*scaleX, sin*scaleX, -sin*scaleY, cos*scaleY, o.x, o.y));
+        }
     }
 
     return mtx
+  }
+
+  /**
+   * 获取节点在舞台全局坐标系内的外接矩形
+   * @returns 
+   */
+  getBounds(): Bounds {
+    const w = this.width, h = this.height,
+      mtx = this.getConcatenatedMatrix(),
+      poly: Vector2d[] = [new Vector2d(0, 0), new Vector2d(w, 0), new Vector2d(w, h), new Vector2d(0, h)];
+    let point: Vector2d, vertexs: Vector2d[];
+
+    for (let i = 0, len = poly.length; i < len; i++) {
+      point = poly[i].transform(mtx, true, true)
+      vertexs[i] = point
+    }
+    return new Bounds(vertexs)
   }
 
   /**
@@ -456,7 +518,6 @@ export default class Node extends EventDispatcher {
    * @param delta 帧间隔时间
    */
   protected _render(renderer: Renderer, delta: number) {
-    this._setRenderMethod(renderer)
     if ((!this.onUpdate || this.onUpdate(delta) !== false) && renderer.startDraw(this)) {
       renderer.transform(this)
       this.render(renderer, delta)
@@ -464,45 +525,13 @@ export default class Node extends EventDispatcher {
     }
   }
 
-  /**
-   * 使用 Canvas 进行渲染
-   * @param renderer 渲染器
-   * @param delta 帧间隔时间
-   */
-  protected _renderCanvas(renderer: Renderer, delta: number) {
-    const children = this.children
-    for (let i = 0, n = children.length; i < n; i++) {
-      const child = children[i]
-      child._render(renderer, delta)
-    }
-  }
-  /**
-   * 使用 WebGL 进行渲染
-   * @param renderer 渲染器
-   * @param delta 帧间隔时间
-   */
-  protected _renderWebGL(renderer: Renderer, delta: number) {
-    const children = this.children
-    for (let i = 0, n = children.length; i < n; i++) {
-      const child = children[i]
-      child._render(renderer, delta)
-    }
-  }
-
-  /**
-   * 子节点发生改变
-   * @param child 子节点
-   */
-  protected _childChanged(child: Node = null) {
-  }
-
-  /**
-   * 根据渲染器类型，设置本节点的渲染方法
-   * @param renderer 渲染器
-   */
-  private _setRenderMethod(renderer: Renderer) {
-    if (!this.render) {
-      this.render = renderer.renderType === RENDER_TYPE.WEBGL ? this._renderWebGL : this._renderCanvas
+  private render(renderer: Renderer, delta: number) {
+    renderer.draw(this)
+    const children = this.children.slice(0)
+    let child: Node
+    for (let i = 0, len = children.length; i < len; i++) {
+      child = children[i]
+      if (child.parent === this) child._render(renderer, delta);
     }
   }
 }

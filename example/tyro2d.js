@@ -63,6 +63,18 @@ class HashObject {
 }
 HashObject._object_id = 0;
 
+var POOL_SIGN;
+(function (POOL_SIGN) {
+    POOL_SIGN["Point"] = "Point";
+    POOL_SIGN["Bounds"] = "Bounds";
+    POOL_SIGN["Polygon"] = "Polygon";
+    POOL_SIGN["Vector2d"] = "Vector2d";
+    POOL_SIGN["Matrix2d"] = "Matrix2d";
+})(POOL_SIGN || (POOL_SIGN = {}));
+/**
+ * 对象池，引擎内部使用，不建议在游戏业务里面使用
+ * 游戏业务逻辑需要使用对象池的话，请自行处理
+ */
 class Pool {
     /**
      * 通过标识获取该类的对象池
@@ -104,7 +116,7 @@ class Pool {
         const pool = Pool._poolDic[sign];
         let rst;
         if (pool.length) {
-            rst = pool.pop();
+            rst = pool.shift();
             rst[Pool.POOLSIGN] = false;
         }
         else {
@@ -117,12 +129,12 @@ Pool.POOLSIGN = "__isInPool";
 Pool._poolDic = {};
 
 class Vector2d extends HashObject {
-    constructor() {
+    constructor(x, y) {
         super();
         this.x = 0;
         this.y = 0;
         this._instanceType = 'Vector2d';
-        this.reset();
+        this.reset(x, y);
     }
     destroy() {
     }
@@ -131,7 +143,16 @@ class Vector2d extends HashObject {
      * @returns Vector2d对象
      */
     static create() {
-        return Pool.getInstanceByClass('Vector2d', Vector2d);
+        return Pool.getInstanceByClass(POOL_SIGN.Vector2d, Vector2d);
+    }
+    reset(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+    clear() {
+        this.x = 0;
+        this.y = 0;
     }
     /**
      * 回收该对象
@@ -140,12 +161,8 @@ class Vector2d extends HashObject {
     recover() {
         if (this === Vector2d.EMPTY)
             return;
-        Pool.recover('Vector2d', this.reset());
-    }
-    reset() {
-        this.x = 0;
-        this.y = 0;
-        return this;
+        this.clear();
+        Pool.recover(POOL_SIGN.Vector2d, this);
     }
     set(x, y) {
         return this._set(x, y);
@@ -366,6 +383,25 @@ class Vector2d extends HashObject {
      */
     clone() {
         return Vector2d.create().set(this.x, this.y);
+    }
+    /**
+     * 将向量经过 mtx 矩阵进行几何转换后返回
+     * @param mtx 应用转换的矩阵
+     * @param round 是否对应向量坐标进行向上取整
+     * @param returnNew 是否返回一个新的向量
+     * @returns
+     */
+    transform(mtx, round = false, returnNew = true) {
+        let x = this.x * mtx.a + this.y * mtx.c + mtx.dx, y = this.x * mtx.b + this.y * mtx.d + mtx.dy;
+        if (round) {
+            x = x + 0.5 >> 0;
+            y = y + 0.5 >> 0;
+        }
+        if (returnNew)
+            return new Vector2d(x, y);
+        this.x = x;
+        this.y = y;
+        return this;
     }
     toString() {
         return `(x: ${this.x}, y: ${this.y})`;
@@ -679,6 +715,41 @@ class EventHandler extends Handler {
 /**@private EventHandler 对象池 */
 EventHandler._pool = [];
 
+function addPrefix(s) {
+    return `tyro2d_${s}`;
+}
+const HASH_OBJECT_TYPE = {
+    // 渲染器
+    Renderer: addPrefix('Renderer'),
+    CanvasRenderer: addPrefix('CanvasRenderer'),
+    // 节点
+    Node: addPrefix('Node'),
+    Stage: addPrefix('Stage'),
+    Scene: addPrefix('Scene'),
+    Sprite: addPrefix('Sprite'),
+    Text: addPrefix('Text'),
+    BitmapText: addPrefix('BitmapText'),
+    // 事件类
+    Event: addPrefix('Event'),
+    EventDispatcher: addPrefix('EventDispatcher'),
+    // 几何绘图类
+    Point: addPrefix('Point'),
+    Polygon: addPrefix('Polygon'),
+    // 数学工具类
+    Matrix2d: addPrefix('Matrix2d'),
+    Vector2d: addPrefix('Vector2d'),
+    // 媒体资源类
+    Texture: addPrefix('Texture'),
+    // 物理类
+    Bounds: addPrefix('Bounds'),
+    // 缓动
+};
+var RENDER_TYPE;
+(function (RENDER_TYPE) {
+    RENDER_TYPE[RENDER_TYPE["CANVAS"] = 0] = "CANVAS";
+    RENDER_TYPE[RENDER_TYPE["WEBGL"] = 1] = "WEBGL";
+})(RENDER_TYPE || (RENDER_TYPE = {}));
+
 /**
  * 2d矩阵类
  *  a c dx
@@ -689,7 +760,7 @@ class Matrix2d extends HashObject {
     constructor(a = 1, b = 0, c = 0, d = 1, dx = 0, dy = 0) {
         super();
         this._instanceType = 'Matrix2d';
-        this.set(a, b, c, d, dx, dy);
+        this.reset(a, b, c, d, dx, dy);
     }
     /**
      * 设置当前矩阵的值
@@ -701,7 +772,7 @@ class Matrix2d extends HashObject {
      * @param dy
      * @returns
      */
-    set(a = 1, b = 0, c = 0, d = 1, dx = 0, dy = 0) {
+    reset(a = 1, b = 0, c = 0, d = 1, dx = 0, dy = 0) {
         this.a = a;
         this.b = b;
         this.c = c;
@@ -709,6 +780,20 @@ class Matrix2d extends HashObject {
         this.dx = dx;
         this.dy = dy;
         return this;
+    }
+    clear() {
+        this.a = 1;
+        this.b = 0;
+        this.c = 0;
+        this.d = 1;
+        this.dx = 0;
+        this.dy = 0;
+    }
+    recover() {
+        if (this === Matrix2d.EMPTY)
+            return;
+        this.clear();
+        Pool.recover(POOL_SIGN.Matrix2d, this);
     }
     /**
      * 复制目标矩阵的值
@@ -815,160 +900,239 @@ class Matrix2d extends HashObject {
     destroy() {
     }
 }
+Matrix2d.EMPTY = new Matrix2d();
 
-class Transform2d extends HashObject {
-    constructor() {
+class Point extends HashObject {
+    constructor(x = 0, y = 0) {
         super();
-        /** 节点的宽 */
-        this._width = 0;
-        /** 节点的高 */
-        this._height = 0;
-        /** 旋转角度 */
-        this._rotation = 0;
-        /** x轴放大倍数 */
-        this._scaleX = 1;
-        /** y轴放大倍数 */
-        this._scaleY = 1;
-        /** x轴位移 */
-        this._x = 0;
-        /** y轴位移 */
-        this._y = 0;
-        /** x轴锚点 */
-        this._anchorX = 0;
-        /** y轴锚点 */
-        this._anchorY = 0;
-        /** 2d矩阵 */
-        this._mMatrix = new Matrix2d();
-        this._instanceType = 'Transform2d';
+        this._instanceType = 'Point';
+        /** x值 */
+        this.x = 0;
+        /** y值 */
+        this.y = 0;
+        this.reset(x, y);
     }
-    get matrix() {
-        return this._mMatrix;
+    reset(x, y) {
+        this.x = x;
+        this.y = y;
+        return this;
     }
-    get width() {
-        return this._width;
+    clear() {
+        this.x = 0;
+        this.y = 0;
     }
-    set width(val) {
-        if (this._width !== val) {
-            this._width = val;
-            this._resetMatrix();
+    recover() {
+        if (this === Point.EMPTY)
+            return;
+        this.clear();
+        Pool.recover(POOL_SIGN.Point, this);
+    }
+    clone() {
+        return Pool.getInstanceByClass(POOL_SIGN.Point, Point).reset(this.x, this.y);
+    }
+    /**
+     * 判断是否跟某个x，y坐标相等
+     * @param x 比较的x值
+     * @param y 比较的y值
+     * @returns
+     */
+    equals(x, y) {
+        return this.x === x && this.y === y;
+    }
+    /**
+     * 判断是否跟某个点位置相同
+     * @param point 判断的点
+     * @returns
+     */
+    equalsPoint(point) {
+        return this.x === point.x && this.y === point.y;
+    }
+    destroy() { }
+}
+Point.EMPTY = new Point();
+
+class Bounds extends HashObject {
+    constructor(verticeList) {
+        super();
+        this.reset(verticeList);
+    }
+    reset(verticeList) {
+        if (this.minPoint === undefined) {
+            this.minPoint = Pool.getInstanceByClass(POOL_SIGN.Point, Point).reset(Infinity, Infinity);
+            this.maxPoint = Pool.getInstanceByClass(POOL_SIGN.Point, Point).reset(-Infinity, -Infinity);
+        }
+        if (typeof verticeList !== 'undefined') {
+            this.update(verticeList);
         }
     }
-    get height() {
-        return this._height;
+    clear() {
+        this.minPoint.reset(Infinity, Infinity);
+        this.maxPoint.reset(-Infinity, -Infinity);
     }
-    set height(val) {
-        if (this._height !== val) {
-            this._height = val;
-            this._resetMatrix();
-        }
-    }
-    /** 旋转角度 */
-    get rotation() {
-        return this._rotation;
-    }
-    set rotation(val) {
-        if (this._rotation !== val) {
-            this._rotation = val;
-        }
-    }
-    get scaleX() {
-        return this._scaleX;
-    }
-    set scaleX(val) {
-        if (this._scaleX !== val) {
-            this._scaleX = val;
-            this._resetMatrix();
-        }
-    }
-    get scaleY() {
-        return this._scaleY;
-    }
-    set scaleY(val) {
-        if (this._scaleY !== val) {
-            this._scaleY = val;
-            this._resetMatrix();
-        }
-    }
-    get anchorX() {
-        return this._anchorX;
-    }
-    set anchorX(val) {
-        if (this._anchorX !== val) {
-            this._anchorX = val;
-            this._resetMatrix();
-        }
-    }
-    get anchorY() {
-        return this._anchorY;
-    }
-    set anchorY(val) {
-        if (this._anchorY !== val) {
-            this._anchorY = val;
-            this._resetMatrix();
-        }
+    recover() {
+        if (this === Bounds.EMPTY)
+            return;
+        this.clear();
+        Pool.recover(POOL_SIGN.Bounds, this);
     }
     get x() {
-        return this._x;
+        return this.minPoint.x;
     }
-    set x(val) {
-        if (this._x !== val) {
-            this._x = val;
-            this._resetMatrix();
-        }
+    set x(value) {
+        const deltaX = this.maxPoint.x - this.minPoint.x;
+        this.minPoint.x = value;
+        this.maxPoint.x = value + deltaX;
     }
     get y() {
-        return this._y;
+        return this.minPoint.y;
     }
-    set y(val) {
-        if (this._y !== val) {
-            this._y = val;
-            this._resetMatrix();
+    set y(value) {
+        const deltaY = this.maxPoint.y - this.minPoint.y;
+        this.minPoint.y = value;
+        this.maxPoint.y = value + deltaY;
+    }
+    get width() {
+        return this.maxPoint.x - this.minPoint.x;
+    }
+    set width(value) {
+        this.maxPoint.x = this.minPoint.x + value;
+    }
+    get height() {
+        return this.maxPoint.y - this.minPoint.y;
+    }
+    set height(value) {
+        this.maxPoint.y = this.minPoint.y + value;
+    }
+    get left() {
+        return this.minPoint.x;
+    }
+    get right() {
+        return this.maxPoint.x;
+    }
+    get top() {
+        return this.minPoint.y;
+    }
+    get bottom() {
+        return this.maxPoint.y;
+    }
+    get centerX() {
+        return this.minPoint.x + (this.width * 0.5);
+    }
+    get centerY() {
+        return this.minPoint.y + (this.height * 0.5);
+    }
+    addBounds(bounds, clear = false) {
+        if (clear === true) {
+            this.maxPoint.x = bounds.maxPoint.x;
+            this.minPoint.x = bounds.minPoint.x;
+            this.maxPoint.y = bounds.maxPoint.y;
+            this.minPoint.y = bounds.minPoint.y;
+        }
+        else {
+            if (bounds.maxPoint.x > this.maxPoint.x)
+                this.maxPoint.x = bounds.maxPoint.x;
+            if (bounds.minPoint.x > this.minPoint.x)
+                this.minPoint.x = bounds.minPoint.x;
+            if (bounds.maxPoint.y > this.maxPoint.y)
+                this.maxPoint.y = bounds.maxPoint.y;
+            if (bounds.minPoint.y > this.minPoint.y)
+                this.minPoint.y = bounds.minPoint.y;
         }
     }
-    /** 刷新位置矩阵数据 */
-    _resetMatrix() {
-        let x = this.x, y = this.y;
-        const anchorX = this.anchorX, anchorY = this.anchorY, scaleX = this.scaleX, scaleY = this.scaleY, width = this.width, height = this.height;
-        console.log(this);
-        if (anchorX !== 0)
-            x = (x - anchorX * width);
-        if (anchorY !== 0)
-            y = (y - anchorY * height);
-        this._mMatrix.set(scaleX, 0, 0, scaleY, x, y);
+    // TODO 当这个点所在位置有矩阵旋转的话，需要额外处理
+    addPoint(point) {
+        this.minPoint.x = Math.min(this.minPoint.x, point.x);
+        this.maxPoint.x = Math.max(this.maxPoint.x, point.x);
+        this.minPoint.y = Math.min(this.minPoint.y, point.y);
+        this.maxPoint.y = Math.max(this.maxPoint.y, point.y);
     }
-    destroy() {
+    /**
+     * 根据多边形的顶点向量集合，生成新的包围盒
+     * @param verticeList 多边形的顶点向量集合
+     */
+    update(verticeList) {
+        this.clear();
+        for (let i = 0; i < verticeList.length; i++) {
+            const vertex = verticeList[i];
+            if (vertex.x > this.maxPoint.x)
+                this.maxPoint.x = vertex.x;
+            if (vertex.x < this.minPoint.x)
+                this.minPoint.x = vertex.x;
+            if (vertex.y > this.maxPoint.y)
+                this.maxPoint.y = vertex.y;
+            if (vertex.y < this.minPoint.y)
+                this.minPoint.y = vertex.y;
+        }
     }
+    /**
+     * 包围盒偏移
+     * @param x x轴偏移量
+     * @param y y轴偏移量
+     */
+    translate(x, y) {
+        this.minPoint.x += x;
+        this.maxPoint.x += x;
+        this.minPoint.y += y;
+        this.maxPoint.y += y;
+    }
+    /**
+     * 根据二维向量进行偏移
+     * @param v 参考的二维向量
+     */
+    translateByVector(v) {
+        this.translate(v.x, v.y);
+    }
+    destroy() { }
 }
-
-var RENDER_TYPE;
-(function (RENDER_TYPE) {
-    RENDER_TYPE[RENDER_TYPE["CANVAS"] = 0] = "CANVAS";
-    RENDER_TYPE[RENDER_TYPE["WEBGL"] = 1] = "WEBGL";
-})(RENDER_TYPE || (RENDER_TYPE = {}));
+Bounds.EMPTY = new Bounds();
 
 /**
- * Node 节点，所有游戏内元素的基类
+ * Node 节点，所有游戏内可视元素的基类
  */
 class Node extends EventDispatcher {
     constructor() {
         super();
+        /** 节点的背景颜色 */
+        this.background = '';
         /** 节点是否可见，默认为true */
         this.visible = true;
-        /** 节点是否可接受交互事件 */
+        /** 节点是否可接受鼠标或触控交互事件 */
         this.mouseEnable = true;
         /** 是否裁剪超出容器范围的子元素，默认 false */
         this.clipChildren = false;
         /** 节点的渲染方式 */
         this.blendMode = 'source-over';
-        this._instanceType = 'Node';
+        /** 节点实例类型 */
+        this._instanceType = HASH_OBJECT_TYPE.Node;
+        /** 节点x轴位置 */
+        this._x = 0;
+        /** 节点y轴位置 */
+        this._y = 0;
+        /** 节点宽度 */
         this._width = 0;
+        /** 节点高度 */
         this._height = 0;
+        /** 节点旋转角度 */
+        this._rotation = 0;
+        /** 节点x轴缩放比例 */
+        this._scaleX = 1;
+        /** 节点y轴缩放比例 */
+        this._scaleY = 1;
+        /** 节点x轴锚点 */
+        this._anchorX = 0;
+        /** 节点y轴锚点 */
+        this._anchorY = 0;
+        /** 节点透明度，0~1 */
         this._opacity = 1;
+        /** 节点深度 */
+        this._zIndex = 0;
+        /** 节点是否已销毁 */
         this._destroyed = false;
+        /** 父节点 */
         this._parent = null;
-        /**@internal 子对象集合 */
+        /** 子对象集合 */
         this._children = Node.ARRAY_EMPTY;
-        this._transform = new Transform2d();
+        this._transform = Matrix2d.EMPTY;
     }
     /** 透明度 */
     get opacity() {
@@ -981,20 +1145,20 @@ class Node extends EventDispatcher {
     }
     /** 相对父容器的x轴偏移量 */
     get x() {
-        return this._transform.x;
+        return this._x;
     }
     set x(val) {
-        if (this.x !== val) {
-            this._transform.x = val;
+        if (this._x !== val) {
+            this._x = val;
         }
     }
     /** 相对父容器的y轴偏移量 */
     get y() {
-        return this._transform.y;
+        return this._y;
     }
     set y(val) {
-        if (this.y !== val) {
-            this._transform.y = val;
+        if (this._y !== val) {
+            this._y = val;
         }
     }
     /**
@@ -1015,7 +1179,6 @@ class Node extends EventDispatcher {
     set width(val) {
         if (this._width !== val) {
             this._width = val;
-            this._transform.width = val;
         }
     }
     /** 节点的高 */
@@ -1025,27 +1188,24 @@ class Node extends EventDispatcher {
     set height(val) {
         if (this._height !== val) {
             this._height = val;
-            this._transform.height = val;
         }
     }
     /** x轴缩放 */
     get scaleX() {
-        return this._transform.scaleX;
+        return this._scaleX;
     }
     set scaleX(val) {
         if (this.scaleX !== val) {
-            this._transform.scaleX = val;
-            this.width *= (val / this.scaleX);
+            this._scaleX = val;
         }
     }
     /** y轴缩放值 */
     get scaleY() {
-        return this._transform.scaleY;
+        return this._scaleY;
     }
     set scaleY(val) {
         if (this.scaleY !== val) {
-            this._transform.scaleY = val;
-            this.height *= (val / this.scaleY);
+            this._scaleY = val;
         }
     }
     /**
@@ -1061,32 +1221,33 @@ class Node extends EventDispatcher {
     }
     /** 旋转角度 */
     get rotation() {
-        return this._transform.rotation;
+        return this._rotation;
     }
     set rotation(val) {
         if (this.rotation !== val) {
-            this._transform.rotation = val;
+            this._rotation = val;
         }
     }
+    /** 变换矩阵 */
     get transform() {
         return this._transform;
     }
     /** x轴锚点 */
     get anchorX() {
-        return this._transform.anchorX;
+        return this._anchorX;
     }
     set anchorX(val) {
         if (this.anchorX !== val) {
-            this._transform.anchorX = val;
+            this._anchorY = val;
         }
     }
     /** y轴锚点 */
     get anchorY() {
-        return this._transform.anchorY;
+        return this._anchorY;
     }
     set anchorY(val) {
         if (this.anchorY !== val) {
-            this._transform.anchorY = val;
+            this._anchorY = val;
         }
     }
     /**
@@ -1126,7 +1287,10 @@ class Node extends EventDispatcher {
     get childrenNum() {
         return this._children.length;
     }
+    /** 销毁方法 */
     destroy() {
+        // TODO: 节点销毁
+        this.destroyed = true;
     }
     /**
      * 帧循环监听
@@ -1135,6 +1299,19 @@ class Node extends EventDispatcher {
      */
     onUpdate(delta) {
         return true;
+    }
+    /**
+     * 将节点添加到某个父节点上
+     * @param parent 父节点
+     * @param index 可选，是否指定位置
+     * @returns 当前节点
+     */
+    addTo(parent, index) {
+        if (typeof index === 'number')
+            parent.addChildAt(this, index);
+        else
+            parent.addChild(this);
+        return this;
     }
     /**
      * 添加子节点
@@ -1325,6 +1502,12 @@ class Node extends EventDispatcher {
         return null;
     }
     /**
+   * 子节点发生改变
+   * @param child 子节点
+   */
+    _childChanged(child = null) {
+    }
+    /**
      * 当前容器内是否包含指定的子节点对象
      * @param child 子节点对象
      * @returns 是否包含
@@ -1345,12 +1528,42 @@ class Node extends EventDispatcher {
      * @param ancestor 祖先节点
      * @returns
      */
-    getConcatenatedMatrix(ancestor) {
+    getConcatenatedMatrix(ancestor = null) {
         const mtx = new Matrix2d();
         for (let o = this; o !== ancestor && o.parent; o = o.parent) {
-            mtx.concat(o.transform.matrix);
+            let cos = 1, sin = 0;
+            const rotation = o.rotation % 360, anchorX = o.anchorX, anchorY = o.anchorY, scaleX = o.scaleX, scaleY = o.scaleY, transform = o.transform;
+            if (transform !== Matrix2d.EMPTY) {
+                mtx.concat(transform);
+            }
+            else {
+                if (rotation) {
+                    const r = rotation * MathTool.DEG_TO_RAD;
+                    cos = Math.cos(r);
+                    sin = Math.sin(r);
+                }
+                if (anchorX !== 0)
+                    mtx.dx -= anchorX;
+                if (anchorY !== 0)
+                    mtx.dy -= anchorY;
+                // TODO: 后续有对齐方案的话，加在这里
+                mtx.concat(new Matrix2d(cos * scaleX, sin * scaleX, -sin * scaleY, cos * scaleY, o.x, o.y));
+            }
         }
         return mtx;
+    }
+    /**
+     * 获取节点在舞台全局坐标系内的外接矩形
+     * @returns
+     */
+    getBounds() {
+        const w = this.width, h = this.height, mtx = this.getConcatenatedMatrix(), poly = [new Vector2d(0, 0), new Vector2d(w, 0), new Vector2d(w, h), new Vector2d(0, h)];
+        let point, vertexs;
+        for (let i = 0, len = poly.length; i < len; i++) {
+            point = poly[i].transform(mtx, true, true);
+            vertexs[i] = point;
+        }
+        return new Bounds(vertexs);
     }
     /**
      * 帧渲染方法
@@ -1358,54 +1571,24 @@ class Node extends EventDispatcher {
      * @param delta 帧间隔时间
      */
     _render(renderer, delta) {
-        this._setRenderMethod(renderer);
         if ((!this.onUpdate || this.onUpdate(delta) !== false) && renderer.startDraw(this)) {
             renderer.transform(this);
             this.render(renderer, delta);
             renderer.endDraw(this);
         }
     }
-    /**
-     * 使用 Canvas 进行渲染
-     * @param renderer 渲染器
-     * @param delta 帧间隔时间
-     */
-    _renderCanvas(renderer, delta) {
-        const children = this.children;
-        for (let i = 0, n = children.length; i < n; i++) {
-            const child = children[i];
-            child._render(renderer, delta);
-        }
-    }
-    /**
-     * 使用 WebGL 进行渲染
-     * @param renderer 渲染器
-     * @param delta 帧间隔时间
-     */
-    _renderWebGL(renderer, delta) {
-        const children = this.children;
-        for (let i = 0, n = children.length; i < n; i++) {
-            const child = children[i];
-            child._render(renderer, delta);
-        }
-    }
-    /**
-     * 子节点发生改变
-     * @param child 子节点
-     */
-    _childChanged(child = null) {
-    }
-    /**
-     * 根据渲染器类型，设置本节点的渲染方法
-     * @param renderer 渲染器
-     */
-    _setRenderMethod(renderer) {
-        if (!this.render) {
-            this.render = renderer.renderType === RENDER_TYPE.WEBGL ? this._renderWebGL : this._renderCanvas;
+    render(renderer, delta) {
+        renderer.draw(this);
+        const children = this.children.slice(0);
+        let child;
+        for (let i = 0, len = children.length; i < len; i++) {
+            child = children[i];
+            if (child.parent === this)
+                child._render(renderer, delta);
         }
     }
 }
-/**@private */
+/** 空节点数组 */
 Node.ARRAY_EMPTY = [];
 
 class Browser {
@@ -1566,7 +1749,7 @@ class Renderer extends HashObject {
     constructor() {
         super();
         this.blendMode = 'source-over';
-        this._instanceType = 'Renderer';
+        this._instanceType = HASH_OBJECT_TYPE.Renderer;
     }
     destroy() {
     }
@@ -1576,48 +1759,80 @@ class CanvasRenderer extends Renderer {
     constructor(canvas) {
         super();
         this.renderType = RENDER_TYPE.CANVAS;
-        this._instanceType = 'CanvasRenderer';
+        this._instanceType = HASH_OBJECT_TYPE.CanvasRenderer;
         this.canvas = canvas;
         this.context = this.canvas.getContext('2d');
     }
     startDraw(target) {
         if (target.visible && target.opacity > 0) {
-            const ctx = this.context;
+            if (target.instanceType === HASH_OBJECT_TYPE.Stage) {
+                this.context.clearRect(0, 0, target.width, target.height);
+            }
             if (target.blendMode !== this.blendMode) {
-                ctx.globalCompositeOperation = this.blendMode = target.blendMode;
+                this.context.globalCompositeOperation = this.blendMode = target.blendMode;
             }
-            ctx.save();
-            // 在绘图前将旋转的中心点先找出来
-            const { anchorX, anchorY, rotation, width, height, scaleX, scaleY } = target.transform;
-            if (rotation !== 0) {
-                const anchorWidth = anchorX * width * scaleX;
-                const anchorHeight = anchorY * height * scaleY;
-                ctx.translate(anchorWidth, anchorHeight);
-                ctx.rotate(MathTool.degToRad(rotation));
-                ctx.translate(-anchorWidth, -anchorHeight);
-            }
+            this.context.save();
             return true;
         }
         return false;
+    }
+    draw(target) {
+        const ctx = this.context, w = target.width, h = target.height;
+        // 绘制节点背景色，默认节点背景色为空
+        if (target.background) {
+            ctx.fillStyle = target.background;
+            ctx.fillRect(0, 0, w, h);
+        }
+        if (target.instanceType === HASH_OBJECT_TYPE.Sprite) {
+            const sprite = target;
+            const img = sprite.texture.image, sw = sprite.texture.width, sh = sprite.texture.height;
+            if (img && sprite.texture.loaded) {
+                ctx.drawImage(img, 0, 0, sw, sh);
+            }
+        }
     }
     endDraw(target) {
         this.context.restore();
     }
     transform(target) {
-        const ctx = this.context, matrix = target.transform.matrix, x = target.x, y = target.y, rotation = target.rotation % 360, anchorX = target.anchorX, anchorY = target.anchorY, scaleX = target.scaleX, scaleY = target.scaleY;
-        if (matrix) {
-            ctx.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.dx, matrix.dy);
+        const ctx = this.context, transform = target.transform, x = target.x, y = target.y, rotation = target.rotation % 360, anchorX = target.anchorX, anchorY = target.anchorY, scaleX = target.scaleX, scaleY = target.scaleY;
+        if (target.instanceType === 'Stage') {
+            const stage = target;
+            const style = this.canvas.style, oldScaleX = stage.prevScaleX, oldScaleY = stage.prevScaleY;
+            let isStyleChange = false;
+            if (oldScaleX && oldScaleX !== scaleX) {
+                stage.prevScaleX = scaleX;
+                style.width = scaleX * stage.width + 'px';
+                isStyleChange = true;
+            }
+            if (oldScaleY && oldScaleY !== scaleY) {
+                stage.prevScaleY = scaleY;
+                style.height = scaleY * stage.height + 'px';
+                isStyleChange = true;
+            }
+            if (isStyleChange) {
+                stage.updateViewport();
+            }
         }
         else {
-            if (x !== 0 || y !== 0)
-                ctx.translate(x, y);
-            if (rotation !== 0)
-                ctx.rotate(rotation * Math.PI / 180);
-            if (scaleX !== 1 || scaleY !== 1)
-                ctx.scale(scaleX, scaleY);
-            if (anchorX !== 0 || anchorY !== 0)
-                ctx.translate(-anchorX, -anchorY);
+            // TODO: 添加 mask
+            // TODO: 对齐方式
+            if (transform !== Matrix2d.EMPTY) {
+                ctx.transform(transform.a, transform.b, transform.c, transform.d, transform.dx, transform.dy);
+            }
+            else {
+                if (x !== 0 || y !== 0)
+                    ctx.translate(x, y);
+                if (rotation !== 0)
+                    ctx.rotate(rotation * MathTool.DEG_TO_RAD);
+                if (scaleX !== 1 || scaleY !== 1)
+                    ctx.scale(scaleX, scaleY);
+                if (anchorX !== 0 || anchorY !== 0)
+                    ctx.translate(-anchorX, -anchorY);
+            }
         }
+        if (target.opacity > 0)
+            ctx.globalAlpha *= target.opacity;
     }
     remove(target) {
     }
@@ -1632,20 +1847,14 @@ class Stage extends Node {
     constructor(canvas, designWidth, designHeight, viewWidth = document.body.clientWidth, viewHeight = document.body.clientHeight, renderType = RENDER_TYPE.CANVAS) {
         super();
         this.paused = false;
-        this.background = '';
-        this._instanceType = 'Stage';
+        this.isStage = true;
+        this.prevScaleX = 1;
+        this.prevScaleY = 1;
+        this._instanceType = HASH_OBJECT_TYPE.Stage;
         console.log(viewWidth, viewHeight);
         this._initCanvas(canvas, designWidth, designHeight);
         this._initRenderer(canvas, renderType);
         this.updateViewport();
-    }
-    /**
-     * 判断目标对象是否是 Stage
-     * @param val 对象
-     * @returns
-     */
-    static isStage(val) {
-        return val instanceof Stage;
     }
     /**
      * 更新舞台在页面中的可视区域，即渲染区域。当 Canvas 的样式border|margin|padding等属性更改后，需要调用此方法更新舞台渲染区域
@@ -1694,13 +1903,6 @@ class Stage extends Node {
             this.renderer = new CanvasRenderer(canvas);
         }
     }
-    _renderCanvas(renderer, delta) {
-        renderer.clear(this.x, this.y, this.width, this.height);
-        super._renderCanvas(renderer, delta);
-    }
-    _renderWebGL(renderer, delta) {
-        throw new Error('暂未支持 WebGL 方式渲染 Stage');
-    }
 }
 
 class Texture extends EventDispatcher {
@@ -1735,7 +1937,7 @@ class Texture extends EventDispatcher {
 class Sprite extends Node {
     constructor(src) {
         super();
-        this._instanceType = 'Sprite';
+        this._instanceType = HASH_OBJECT_TYPE.Sprite;
         this.texture = new Texture(src);
     }
     get texture() {
@@ -1748,19 +1950,6 @@ class Sprite extends Node {
         this._texture = tex;
         this.width = this._texture.width;
         this.height = this._texture.height;
-    }
-    _renderCanvas(renderer, delta) {
-        const ctx = renderer.context;
-        const texture = this.texture;
-        const img = texture.image;
-        this.width = texture.width, this.height = texture.height;
-        if (img && this.width && this.height && texture.loaded) {
-            ctx.drawImage(img, 0, 0, this.width, this.height);
-        }
-        super._renderCanvas(renderer, delta);
-    }
-    _renderWebGL(renderer, delta) {
-        throw new Error('暂未支持 WebGL 方式渲染 Sprite');
     }
 }
 

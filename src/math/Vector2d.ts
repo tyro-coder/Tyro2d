@@ -1,6 +1,7 @@
 import HashObject from '../utils/HashObject';
 import Pool, { POOL_SIGN } from '../utils/Pool';
 import MathTool from './MathTool';
+import Matrix2d from './Matrix2d';
 
 export default class Vector2d extends HashObject {
   destroy(): void {
@@ -301,6 +302,27 @@ export default class Vector2d extends HashObject {
    */
   clone(): Vector2d {
     return Vector2d.create().set(this.x, this.y);
+  }
+
+  /**
+   * 将向量经过 mtx 矩阵进行几何转换后返回
+   * @param mtx 应用转换的矩阵
+   * @param round 是否对应向量坐标进行向上取整
+   * @param returnNew 是否返回一个新的向量
+   * @returns 
+   */
+  transform(mtx: Matrix2d, round: boolean = false, returnNew: boolean = true): Vector2d {
+    let x = this.x * mtx.a + this.y * mtx.c + mtx.dx,
+      y = this.x * mtx.b + this.y * mtx.d + mtx.dy;
+    
+    if (round) {
+      x = x + 0.5 >> 0;
+      y = y + 0.5 >> 0;
+    }
+    if (returnNew) return new Vector2d(x, y)
+    this.x = x;
+    this.y = y;
+    return this;
   }
 
   toString(): string {

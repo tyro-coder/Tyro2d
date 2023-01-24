@@ -1,17 +1,20 @@
 import Renderer from "../renderer/Renderer";
 import Utils from '../utils/Utils';
 import Node from "./Node";
-import { ITickerHandler, IViewPort, RENDER_TYPE } from "../utils/Constants";
+import { ITickerHandler, IViewPort,  } from "../utils/Constants";
 import CanvasRenderer from "../renderer/CanvasRenderer";
+import { HASH_OBJECT_TYPE, RENDER_TYPE } from "../config/constants";
 
 export default class Stage extends Node implements ITickerHandler {
   public canvas: HTMLCanvasElement
   public renderer: Renderer|CanvasRenderer
   public paused: boolean = false
   public viewport: IViewPort
-  public background: string | CanvasGradient | CanvasPattern = ''
+  public isStage: boolean = true
+  public prevScaleX: number = 1
+  public prevScaleY: number = 1
 
-  protected _instanceType: string = 'Stage'
+  protected _instanceType: string = HASH_OBJECT_TYPE.Stage
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -28,15 +31,6 @@ export default class Stage extends Node implements ITickerHandler {
     this._initCanvas(canvas, designWidth, designHeight)
     this._initRenderer(canvas, renderType)
     this.updateViewport()
-  }
-
-  /**
-   * 判断目标对象是否是 Stage
-   * @param val 对象
-   * @returns 
-   */
-  static isStage(val: Node) {
-    return val instanceof Stage
   }
 
   /**
@@ -88,14 +82,5 @@ export default class Stage extends Node implements ITickerHandler {
     if (renderType === RENDER_TYPE.CANVAS) {
       this.renderer = new CanvasRenderer(canvas)
     }
-  }
-
-  protected _renderCanvas(renderer: Renderer, delta: number) {
-    renderer.clear(this.x, this.y, this.width, this.height)
-    super._renderCanvas(renderer, delta)
-  }
-
-  protected _renderWebGL(renderer: Renderer, delta: number) {
-    throw new Error('暂未支持 WebGL 方式渲染 Stage')
   }
 }
