@@ -2676,8 +2676,8 @@ class Tween extends HashObject {
                 console.log('reverseFlag < 0', elapsedTime);
                 ratio = 1 - ratio;
             }
-            if (this._reverseFlag < 1e-7) {
-                if ((this.repeat > 0 && this._repeatCount++ >= this.repeat) || (this.repeat === 0 && !this.loop)) {
+            if (ratio < 1e-7) {
+                if ((this.repeat > 0 && ++this._repeatCount >= this.repeat) || (this.repeat === 0 && !this.loop)) {
                     this.isComplete = true;
                 }
                 else {
@@ -2697,7 +2697,7 @@ class Tween extends HashObject {
         }
         this._elapsedTime = elapsedTime;
         // 渲染和更新回调
-        this._render(elapsedTime * ratio);
+        this._render(this.duration * ratio);
         // 检查是否完成缓动
         if (ratio >= 1) {
             if (this.reverse) {

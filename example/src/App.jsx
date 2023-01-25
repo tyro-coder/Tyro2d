@@ -34,8 +34,6 @@ function App() {
       rotation: 360,
     }, {
       loop: true,
-      repeat: 2,
-      reverse: true,
       duration: 2000,
       ease: Ease.cubicInOut,
       onComplete: (target) => {
@@ -56,8 +54,10 @@ function App() {
     Tween.to(node2, {
       x: 500,
     }, {
-      duration: 2000,
-      ease: Ease.backInOut,
+      loop: true,
+      repeat: 3,
+      reverse: true,
+      duration: 2000
     })
 
     const node3 = new Node()
