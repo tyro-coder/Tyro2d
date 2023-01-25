@@ -126,7 +126,7 @@ export default class Node extends EventDispatcher {
     return this._scaleX
   }
   set scaleX(val: number) {
-    if (this.scaleX !== val) {
+    if (this._scaleX !== val) {
       this._scaleX = val
     }
   }
@@ -135,7 +135,7 @@ export default class Node extends EventDispatcher {
     return this._scaleY
   }
   set scaleY(val: number) {
-    if (this.scaleY !== val) {
+    if (this._scaleY !== val) {
       this._scaleY = val
     }
   }
@@ -155,7 +155,7 @@ export default class Node extends EventDispatcher {
     return this._rotation
   }
   set rotation(val: number) {
-    if (this.rotation !== val) {
+    if (this._rotation !== val) {
       this._rotation = val
     }
   }
@@ -168,8 +168,8 @@ export default class Node extends EventDispatcher {
     return this._anchorX;
   }
   set anchorX(val: number) {
-    if (this.anchorX !== val) {
-      this._anchorY = val
+    if (this._anchorX !== val) {
+      this._anchorX = val
     }
   }
   /** y轴锚点 */
@@ -177,7 +177,7 @@ export default class Node extends EventDispatcher {
     return this._anchorY
   }
   set anchorY(val: number) {
-    if (this.anchorY !== val) {
+    if (this._anchorY !== val) {
       this._anchorY = val
     }
   }

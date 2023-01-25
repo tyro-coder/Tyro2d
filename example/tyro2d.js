@@ -743,6 +743,7 @@ const HASH_OBJECT_TYPE = {
     // 物理类
     Bounds: addPrefix('Bounds'),
     // 缓动
+    Tween: addPrefix('Tween'),
 };
 var RENDER_TYPE;
 (function (RENDER_TYPE) {
@@ -1195,7 +1196,7 @@ class Node extends EventDispatcher {
         return this._scaleX;
     }
     set scaleX(val) {
-        if (this.scaleX !== val) {
+        if (this._scaleX !== val) {
             this._scaleX = val;
         }
     }
@@ -1204,7 +1205,7 @@ class Node extends EventDispatcher {
         return this._scaleY;
     }
     set scaleY(val) {
-        if (this.scaleY !== val) {
+        if (this._scaleY !== val) {
             this._scaleY = val;
         }
     }
@@ -1224,7 +1225,7 @@ class Node extends EventDispatcher {
         return this._rotation;
     }
     set rotation(val) {
-        if (this.rotation !== val) {
+        if (this._rotation !== val) {
             this._rotation = val;
         }
     }
@@ -1237,8 +1238,8 @@ class Node extends EventDispatcher {
         return this._anchorX;
     }
     set anchorX(val) {
-        if (this.anchorX !== val) {
-            this._anchorY = val;
+        if (this._anchorX !== val) {
+            this._anchorX = val;
         }
     }
     /** y轴锚点 */
@@ -1246,7 +1247,7 @@ class Node extends EventDispatcher {
         return this._anchorY;
     }
     set anchorY(val) {
-        if (this.anchorY !== val) {
+        if (this._anchorY !== val) {
             this._anchorY = val;
         }
     }
@@ -1921,12 +1922,10 @@ class Texture extends EventDispatcher {
             const img = this.image = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => {
-                console.log('加载成功');
                 img.onload = null;
                 this.width = img.naturalWidth;
                 this.height = img.naturalHeight;
                 this.loaded = true;
-                console.log(this);
                 resolve(this);
             };
             img.src = src;
@@ -1944,203 +1943,18 @@ class Sprite extends Node {
         return this._texture;
     }
     set texture(tex) {
-        if (typeof tex === 'string') {
-            this._texture = new Texture(tex);
-        }
-        this._texture = tex;
-        this.width = this._texture.width;
-        this.height = this._texture.height;
-    }
-}
-
-class Ticker {
-    constructor(fps = 60) {
-        this._paused = true;
-        this._targetFPS = 0;
-        this._interval = 0;
-        this._intervalId = null;
-        this._tickers = [];
-        this._lastTime = 0;
-        this._tickCount = 0;
-        this._tickTime = 0;
-        this._measuredFPS = 0;
-        this._targetFPS = fps;
-        this._interval = 1000 / this._targetFPS;
-    }
-    /**
-     * 启动定时器
-     * @param useRAF 是否使用 requestAnimationFrame
-     * @returns
-     */
-    start(useRAF = true) {
-        if (this._intervalId)
-            return;
-        this._lastTime = Browser.now;
-        const self = this, interval = this._interval, raf = window.requestAnimationFrame ||
-            window[Browser.jsVendor + "RequestAnimationFrame"];
-        let runLoop;
-        if (useRAF && raf && interval < 17) {
-            this._useRAF = true;
-            runLoop = function () {
-                self._intervalId = raf(runLoop);
-                self._tick();
-            };
-        }
-        else {
-            runLoop = function () {
-                self._intervalId = window.setTimeout(runLoop, interval);
-                self._tick();
-            };
-        }
-        this._paused = false;
-        runLoop();
-    }
-    /**
-     * 停止定时器
-     */
-    stop() {
-        if (this._useRAF) {
-            const cancelRAF = window.cancelAnimationFrame ||
-                window[Browser.jsVendor + "CancelAnimationFrame"];
-            cancelRAF(this._intervalId);
-        }
-        else {
-            clearTimeout(this._intervalId);
-        }
-        this._intervalId = null;
-        this._lastTime = 0;
-        this._paused = true;
-    }
-    /**
-     * 暂停定时器
-     */
-    pause() {
-        this._paused = true;
-    }
-    /**
-     * 恢复定时器
-     */
-    resume() {
-        this._paused = false;
-    }
-    /**
-     * 获得测定的运行时帧率
-     */
-    getMeasuredFPS() {
-        return Math.min(this._measuredFPS, this._targetFPS);
-    }
-    /**
-     * 添加定时器对象
-     * @param tickObj 定时器对象
-     */
-    addTick(tickObj) {
-        if (!tickObj || typeof tickObj.tick != "function") {
-            throw new Error("Ticker: The tick object must implement the tick method.");
-        }
-        this._tickers.push(tickObj);
-    }
-    /**
-     * 移除定时器对象
-     * @param tickObj 定时器对象
-     */
-    removeTick(tickObj) {
-        const tickers = this._tickers, index = tickers.indexOf(tickObj);
-        if (index >= 0) {
-            tickers.splice(index, 1);
+        if (this._texture !== tex) {
+            this._texture = tex;
+            this.width = this._texture.width;
+            this.height = this._texture.height;
         }
     }
-    /**
-     * 下次定时回调
-     * @param callback 回调方法
-     * @returns
-     */
-    nextTick(callback) {
-        const that = this;
-        const tickObj = {
-            tick: function (dt) {
-                that.removeTick(tickObj);
-                callback && callback();
-            },
-        };
-        that.addTick(tickObj);
-        return tickObj;
-    }
-    /**
-     * 清空所有定时器
-     */
-    clear() {
-        const tickers = this._tickers;
-        tickers.length = 0;
-    }
-    /**
-     * 延迟指定的时间后调用回调，类似 setTimeout
-     * @param callback 回调方法
-     * @param duration 延迟时间
-     */
-    timeout(callback, duration) {
-        const that = this;
-        const targetTime = Browser.now + duration;
-        const tickObj = {
-            tick: function () {
-                const nowTime = Browser.now;
-                const dt = nowTime - targetTime;
-                if (dt >= 0) {
-                    that.removeTick(tickObj);
-                    callback();
-                }
-            },
-        };
-        that.addTick(tickObj);
-        return tickObj;
-    }
-    /**
-     * 每隔一定的时间执行一次回调方法，类似 setInterval
-     * @param callback 回调方法
-     * @param duration 延时
-     * @returns
-     */
-    interval(callback, duration) {
-        const that = this;
-        let targetTime = Browser.now + duration;
-        const tickObj = {
-            tick: function () {
-                let nowTime = Browser.now;
-                const dt = nowTime - targetTime;
-                if (dt >= 0) {
-                    if (dt < duration) {
-                        nowTime -= dt;
-                    }
-                    targetTime = nowTime + duration;
-                    callback();
-                }
-            },
-        };
-        that.addTick(tickObj);
-        return tickObj;
-    }
-    /**
-     * 每一帧执行的方法
-     * @returns
-     */
-    _tick() {
-        if (this._paused)
-            return;
-        const startTime = Browser.now, deltaTime = startTime - this._lastTime, tickers = this._tickers;
-        //calculates the real fps
-        if (++this._tickCount >= this._targetFPS) {
-            this._measuredFPS =
-                (1000 / (this._tickTime / this._tickCount) + 0.5) >> 0;
-            this._tickCount = 0;
-            this._tickTime = 0;
-        }
-        else {
-            this._tickTime += startTime - this._lastTime;
-        }
-        this._lastTime = startTime;
-        const tickersCopy = tickers.slice(0);
-        for (let i = 0, len = tickersCopy.length; i < len; i++) {
-            tickersCopy[i].tick(deltaTime);
-        }
+    _render(renderer, delta) {
+        if (!this.width && this._texture.width)
+            this.width = this._texture.width;
+        if (!this.height && this._texture.height)
+            this.height = this._texture.height;
+        super._render(renderer, delta);
     }
 }
 
@@ -2156,7 +1970,7 @@ class Ease {
      * @param	d 指定运动的持续时间。
      * @return 指定时间的插补属性的值。
      */
-    static linearNone(t, b, c, d) {
+    static linear(t, b, c, d) {
         return (c * t) / d + b;
     }
     /**
@@ -2679,155 +2493,192 @@ Ease.HALF_PI = Math.PI * 0.5;
 /**@private */
 Ease.PI2 = Math.PI * 2;
 
-class Tween {
-    constructor(target) {
-        /** 缓动对象 */
+class Tween extends HashObject {
+    constructor(target, fromProps, toProps, params) {
+        super();
         this.target = null;
-        /** 缓动开始时的节点属性 */
-        this.fromProps = null;
-        /** 缓动节点的目标属性 */
-        this.toProps = null;
-        /** 缓动的持续时长，毫秒 */
         this.duration = 1000;
-        /** 缓动延迟时间 */
         this.delay = 0;
-        /** 缓动是否暂停 */
         this.paused = false;
-        /** 缓动是否反复执行 */
+        this.loop = false;
         this.reverse = false;
-        /** 重播次数，如果 loop=0，则表示无限循环播放 */
-        this.loop = 1;
-        /** 循环时需要延迟的时长，毫秒 */
-        this.loopDelay = 0;
-        /** 缓动函数 */
-        this.ease = Ease.linearNone;
-        /** 当前时间，位于 0 和 duration 之间 */
-        this.time = 0;
-        /** 缓动开始时间戳 */
+        this.repeat = 0;
+        this.repeatDelay = 0;
+        this.ease = Ease.linear;
+        this.isStart = false;
+        this.isComplete = false;
+        /** 开始时间 */
         this._startTime = 0;
-        /** 缓动跳到的时间，值为 0 到 duration 区间 */
+        /** 当前tick所在时间长度 */
+        this._elapsedTime = 0;
+        /** 跳跃时间 */
         this._seekTime = 0;
-        /** 缓动暂停时间戳 */
+        /** 暂停时间 */
         this._pausedTime = 0;
-        /** 缓动暂停后开始的时间戳 */
+        /** 暂停后的开始时间 */
         this._pausedStartTime = 0;
-        /** 反复播放的方向标识 */
+        /** 是否往复 */
         this._reverseFlag = 1;
-        /** 已经循环的次数 */
-        this._loopCount = 0;
-        /** 是否已经开始缓动 */
-        this._isStart = false;
-        /** 是否已完成缓动动画 */
-        this._isComplete = false;
-        /** 缓存是否循环 */
-        this._isLoop = false;
+        /** 重复次数，0为无限重复 */
+        this._repeatCount = 0;
+        this._instanceType = HASH_OBJECT_TYPE.Tween;
         this.target = target;
-        // 记录当前节点的缓动属性值
-        this.fromProps = {
-            x: target.x,
-            y: target.y,
-            scaleX: target.scaleX,
-            scaleY: target.scaleY,
-            opacity: target.opacity,
-            rotation: target.rotation,
+        this.setProps(fromProps, toProps);
+        if (params) {
+            typeof params.duration === 'number' && (this.duration = params.duration);
+            typeof params.delay === 'number' && (this.delay = params.delay);
+            typeof params.ease === 'function' && (this.ease = params.ease);
+            typeof params.loop === 'boolean' && (this.loop = params.loop);
+            typeof params.repeat === 'number' && (this.repeat = params.repeat);
+            typeof params.reverse === 'boolean' && (this.reverse = params.reverse);
+            typeof params.onStart === 'function' && (this.onStart = params.onStart);
+            typeof params.onUpdate === 'function' && (this.onUpdate = params.onUpdate);
+            typeof params.onComplete === 'function' && (this.onComplete = params.onComplete);
+        }
+    }
+    static tick() {
+        let tween;
+        for (let i = 0, len = Tween.TweenList.length; i < len; i++) {
+            tween = Tween.TweenList[i];
+            if (tween && tween._update(Browser.now)) {
+                Tween.TweenList.splice(i, 1);
+                i--;
+            }
+        }
+        return Tween;
+    }
+    static add(tween) {
+        const tweens = Tween.TweenList;
+        if (tweens.indexOf(tween) === -1)
+            tweens.push(tween);
+        return Tween;
+    }
+    static remove(tween) {
+        const i = Tween.TweenList.indexOf(tween);
+        if (i > -1)
+            Tween.TweenList.splice(i, 1);
+        return Tween;
+    }
+    static removeAll() {
+        Tween.TweenList.length = 0;
+        return Tween;
+    }
+    static fromTo(target, fromProps, toProps, params) {
+        const tween = new Tween(target, fromProps, toProps, params);
+        tween.start();
+        return tween;
+    }
+    static from(target, fromProps, params) {
+        return Tween.fromTo(target, fromProps, null, params);
+    }
+    static to(target, toProps = null, params) {
+        return Tween.fromTo(target, null, toProps, params);
+    }
+    setProps(fromProps, toProps) {
+        this._fromProps = this._toProps = {
+            x: this.target.x,
+            y: this.target.y,
+            scaleX: this.target.scaleX,
+            scaleY: this.target.scaleY,
+            opacity: this.target.opacity,
+            rotation: this.target.rotation,
         };
+        if (fromProps) {
+            this._fromProps = Object.assign(Object.assign({}, this._fromProps), fromProps);
+        }
+        if (toProps) {
+            this._toProps = Object.assign(Object.assign({}, this._toProps), toProps);
+        }
+        return this;
+    }
+    start() {
+        this._startTime = Browser.now + this.delay;
+        this._seekTime = 0;
+        this._pausedTime = 0;
+        this._reverseFlag = 1;
+        this._repeatCount = 0;
+        this.paused = false;
+        this.isStart = false;
+        this.isComplete = false;
+        Tween.add(this);
+        return this;
+    }
+    stop() {
+        Tween.remove(this);
+        return this;
+    }
+    pause() {
+        this.paused = true;
+        this._pausedStartTime = Browser.now;
+        return this;
+    }
+    resume() {
+        this.paused = false;
+        if (this._pausedStartTime) {
+            this._pausedTime += Browser.now - this._pausedStartTime;
+        }
+        this._pausedStartTime = 0;
+        return this;
     }
     /**
-     * 添加节点的缓动实例
-     * @param target 节点对象
-     * @param coverBefore 是否覆盖该节点之前未完成的缓动实例
-     * @returns 缓动实例
+     * 跳到Tween指定时间
+     * @param time 指定要跳转的时间。取值范围是 0 ~ duration
+     * @param pause 是否暂停
      */
-    static add(target, coverBefore = false) {
-        const tween = new Tween(target);
-        const gid = target.$_GID || (target.$_GID = Utils.getGID());
-        if (!Tween.tweenMap[gid]) {
-            Tween.tweenMap[gid] = [tween];
-        }
-        else {
-            if (coverBefore)
-                Tween.clear(target);
-            Tween.tweenMap[gid].push(tween);
-        }
+    seek(time, pause) {
+        const current = Browser.now;
+        this._startTime = current;
+        this._seekTime = time;
+        this._pausedTime = 0;
+        if (pause !== undefined)
+            this.paused = pause;
+        this._update(current, true);
+        Tween.add(this);
+        return this;
+    }
+    link(tween) {
+        const delay = tween.delay, startTime = this._startTime;
+        tween._startTime = startTime + this.duration + delay;
+        this._next = tween;
+        Tween.remove(tween);
         return tween;
     }
     /**
-     * 清楚缓动
-     * @param target 目标节点或缓动实例
-     * @returns
+     * Tween类内部的渲染方法
+     * @param elapsedTime 时间戳，指0 ~ duration 之间的时间长度
      */
-    static clear(target) {
-        let node = target, clearTargetAll = true;
-        if (target instanceof Tween) {
-            node = target.target;
-            clearTargetAll = false;
+    _render(elapsedTime) {
+        const target = this.target, fromProps = this._fromProps, toProps = this._toProps;
+        for (const key in fromProps) {
+            target[key] = this.ease(elapsedTime, fromProps[key], toProps[key] - fromProps[key], this.duration);
         }
-        const gid = node.$_GID;
-        const tweenList = Tween.tweenMap[gid];
-        if (tweenList && tweenList.length > 0) {
-            if (clearTargetAll) {
-                tweenList.length = 0;
-            }
-            else {
-                const i = tweenList.indexOf(target);
-                if (i > -1)
-                    tweenList.splice(i, 1);
-            }
-        }
-        return Tween;
     }
     /**
-     * 清空所有的 Tween 实例
-     * @returns
+     * Tween类的内部更新方法
+     * @param time 系统当前时间
+     * @param forceUpdate 是否强制刷新
+     * @returns boolean 返回true的话会从缓动数组里面将缓动移除
      */
-    static clearAll() {
-        Tween.tweenMap = {};
-        return Tween;
-    }
-    /**
-     * 帧更新所有的 Tween 实例
-     */
-    static tick() {
-        // console.log('更新Tween')
-        // const tweenList = Tween.tweenList, len = tweenList.length
-        // let tween, i
-        // for (i = 0; i < len; i++) {
-        //   tween = tweenList[i]
-        //   if (tween && tween.tick(Browser.now)) {
-        //     tweenList.splice(i, 1)
-        //     i--
-        //   }
-        // }
-        // return Tween
-    }
-    to(toProps, params) {
-        this.toProps = Object.assign({}, toProps);
-        for (const key in params) {
-            this[key] = params[key];
-        }
-    }
-    tick(now) {
-        // 判断是否暂停了
-        if (this.paused)
+    _update(time, forceUpdate = false) {
+        if (this.paused && !forceUpdate)
             return false;
-        // 判断是否已完成缓动
-        if (this._isComplete)
+        if (this.isComplete)
             return true;
-        // 判断是否还剩余时间进行缓动，是否循环，是否反复
-        const elapsedTime = now - this._startTime - this._pausedTime + this._seekTime;
+        // elapsed time
+        const elapsedTime = time - this._startTime - this._pausedTime + this._seekTime;
         if (elapsedTime < 0)
             return false;
-        let ratio = this.ease(this._startTime, 0, 1, this.duration);
-        ratio = ratio < 0 ? 0 : ratio >= 1 ? 1 : ratio;
-        if (this.reverse && this._isStart) {
-            // 回放
+        let ratio = elapsedTime / this.duration;
+        ratio = (ratio <= 0 ? 0 : ratio >= 1 ? 1 : ratio);
+        // 已经开始并且要求往复执行
+        if (this.reverse && this.isStart) {
             if (this._reverseFlag < 0) {
+                console.log('reverseFlag < 0', elapsedTime);
                 ratio = 1 - ratio;
             }
-            // 继续播放
-            if (ratio < 1e-7) {
-                if ((this.loop > 0 && this._loopCount++ >= this.loop) || (this.loop === 0 && !this._isLoop)) {
-                    this._isComplete = true;
+            if (this._reverseFlag < 1e-7) {
+                if ((this.repeat > 0 && this._repeatCount++ >= this.repeat) || (this.repeat === 0 && !this.loop)) {
+                    this.isComplete = true;
                 }
                 else {
                     this._startTime = Browser.now;
@@ -2836,39 +2687,247 @@ class Tween {
                 }
             }
         }
-        if (!this._isStart) {
-            this._isStart = true;
-            if (this.onStart)
-                this.onStart.callback.call(this, this);
+        // 开始缓动的回调
+        if (!this.isStart) {
+            this.setProps(this._fromProps, this._toProps);
+            this.isStart = true;
+            if (this.onStart) {
+                this.onStart.call(this, this);
+            }
         }
-        this.time = elapsedTime;
-        this._render(ratio);
-        if (this.onUpdate)
-            this.onUpdate.callback.call(this, ratio, this);
+        this._elapsedTime = elapsedTime;
+        // 渲染和更新回调
+        this._render(elapsedTime * ratio);
+        // 检查是否完成缓动
         if (ratio >= 1) {
             if (this.reverse) {
                 this._startTime = Browser.now;
                 this._pausedTime = 0;
                 this._reverseFlag *= -1;
             }
-            else if (this._isLoop || this.loop > 0 && this._loopCount++ < this.loop) {
-                this._startTime = Browser.now * this.loopDelay;
+            else if (this.loop || this.repeat > 0 && this._repeatCount++ < this.repeat) {
+                this._startTime = Browser.now + this.repeatDelay;
                 this._pausedTime = 0;
             }
             else {
-                this._isComplete = true;
+                this.isComplete = true;
             }
         }
-        return true;
+        // 下一个缓动
+        const next = this._next;
+        if (next && next._elapsedTime <= 0) {
+            const nextStartTime = next._startTime;
+            if (nextStartTime > 0 && nextStartTime <= time) {
+                next._render(elapsedTime);
+                next._elapsedTime = elapsedTime;
+                Tween.add(next);
+            }
+            else if (this.isComplete && (nextStartTime < 0 || nextStartTime > time)) {
+                next.start();
+            }
+        }
+        if (this.isComplete) {
+            typeof this.onComplete === 'function' && this.onComplete.call(this, this);
+            return true;
+        }
+        return false;
     }
-    _render(ratio) {
-        const target = this.target, fromProps = this.fromProps;
-        for (const key in fromProps) {
-            target[key] = fromProps[key] + (this.toProps[key] - this.fromProps[key]) * ratio;
+    destroy() {
+        throw new Error("Method not implemented.");
+    }
+}
+Tween.TweenList = [];
+
+class Ticker {
+    constructor(fps = 60) {
+        this._paused = true;
+        this._targetFPS = 0;
+        this._interval = 0;
+        this._intervalId = null;
+        this._tickers = [];
+        this._lastTime = 0;
+        this._tickCount = 0;
+        this._tickTime = 0;
+        this._measuredFPS = 0;
+        this._targetFPS = fps;
+        this._interval = 1000 / this._targetFPS;
+    }
+    /**
+     * 启动定时器
+     * @param useRAF 是否使用 requestAnimationFrame
+     * @returns
+     */
+    start(useRAF = true) {
+        if (this._intervalId)
+            return;
+        this._lastTime = Browser.now;
+        const self = this, interval = this._interval, raf = window.requestAnimationFrame ||
+            window[Browser.jsVendor + "RequestAnimationFrame"];
+        let runLoop;
+        if (useRAF && raf && interval < 17) {
+            this._useRAF = true;
+            runLoop = function () {
+                self._intervalId = raf(runLoop);
+                self._tick();
+            };
+        }
+        else {
+            runLoop = function () {
+                self._intervalId = window.setTimeout(runLoop, interval);
+                self._tick();
+            };
+        }
+        this._paused = false;
+        runLoop();
+    }
+    /**
+     * 停止定时器
+     */
+    stop() {
+        if (this._useRAF) {
+            const cancelRAF = window.cancelAnimationFrame ||
+                window[Browser.jsVendor + "CancelAnimationFrame"];
+            cancelRAF(this._intervalId);
+        }
+        else {
+            clearTimeout(this._intervalId);
+        }
+        this._intervalId = null;
+        this._lastTime = 0;
+        this._paused = true;
+    }
+    /**
+     * 暂停定时器
+     */
+    pause() {
+        this._paused = true;
+    }
+    /**
+     * 恢复定时器
+     */
+    resume() {
+        this._paused = false;
+    }
+    /**
+     * 获得测定的运行时帧率
+     */
+    getMeasuredFPS() {
+        return Math.min(this._measuredFPS, this._targetFPS);
+    }
+    /**
+     * 添加定时器对象
+     * @param tickObj 定时器对象
+     */
+    addTick(tickObj) {
+        if (!tickObj || typeof tickObj.tick != "function") {
+            throw new Error("Ticker: The tick object must implement the tick method.");
+        }
+        this._tickers.push(tickObj);
+    }
+    /**
+     * 移除定时器对象
+     * @param tickObj 定时器对象
+     */
+    removeTick(tickObj) {
+        const tickers = this._tickers, index = tickers.indexOf(tickObj);
+        if (index >= 0) {
+            tickers.splice(index, 1);
+        }
+    }
+    /**
+     * 下次定时回调
+     * @param callback 回调方法
+     * @returns
+     */
+    nextTick(callback) {
+        const that = this;
+        const tickObj = {
+            tick: function (dt) {
+                that.removeTick(tickObj);
+                callback && callback();
+            },
+        };
+        that.addTick(tickObj);
+        return tickObj;
+    }
+    /**
+     * 清空所有定时器
+     */
+    clear() {
+        const tickers = this._tickers;
+        tickers.length = 0;
+    }
+    /**
+     * 延迟指定的时间后调用回调，类似 setTimeout
+     * @param callback 回调方法
+     * @param duration 延迟时间
+     */
+    timeout(callback, duration) {
+        const that = this;
+        const targetTime = Browser.now + duration;
+        const tickObj = {
+            tick: function () {
+                const nowTime = Browser.now;
+                const dt = nowTime - targetTime;
+                if (dt >= 0) {
+                    that.removeTick(tickObj);
+                    callback();
+                }
+            },
+        };
+        that.addTick(tickObj);
+        return tickObj;
+    }
+    /**
+     * 每隔一定的时间执行一次回调方法，类似 setInterval
+     * @param callback 回调方法
+     * @param duration 延时
+     * @returns
+     */
+    interval(callback, duration) {
+        const that = this;
+        let targetTime = Browser.now + duration;
+        const tickObj = {
+            tick: function () {
+                let nowTime = Browser.now;
+                const dt = nowTime - targetTime;
+                if (dt >= 0) {
+                    if (dt < duration) {
+                        nowTime -= dt;
+                    }
+                    targetTime = nowTime + duration;
+                    callback();
+                }
+            },
+        };
+        that.addTick(tickObj);
+        return tickObj;
+    }
+    /**
+     * 每一帧执行的方法
+     * @returns
+     */
+    _tick() {
+        if (this._paused)
+            return;
+        const startTime = Browser.now, deltaTime = startTime - this._lastTime, tickers = this._tickers;
+        //calculates the real fps
+        if (++this._tickCount >= this._targetFPS) {
+            this._measuredFPS =
+                (1000 / (this._tickTime / this._tickCount) + 0.5) >> 0;
+            this._tickCount = 0;
+            this._tickTime = 0;
+        }
+        else {
+            this._tickTime += startTime - this._lastTime;
+        }
+        this._lastTime = startTime;
+        const tickersCopy = tickers.slice(0);
+        for (let i = 0, len = tickersCopy.length; i < len; i++) {
+            tickersCopy[i].tick(deltaTime);
         }
     }
 }
-Tween.tweenMap = {};
 
 class Tyro2d {
     /**
@@ -2909,7 +2968,7 @@ class Tyro2d {
      */
     static destroy() {
         Tyro2d.stage.destroy();
-        Tyro2d.Tween.clearAll();
+        Tyro2d.Tween.removeAll();
         Tyro2d.eventBus.destroy();
         Tyro2d.ticker.stop();
         Tyro2d.ticker.clear();
@@ -2920,4 +2979,4 @@ class Tyro2d {
 Tyro2d.Event = Event;
 Tyro2d.Tween = Tween;
 
-export { Event$1 as Event, EventDispatcher, MathTool, Node, Sprite, Stage, Tyro2d, Utils, Vector2d };
+export { Ease, Event$1 as Event, EventDispatcher, MathTool, Node, Sprite, Stage, Tween, Tyro2d, Utils, Vector2d };

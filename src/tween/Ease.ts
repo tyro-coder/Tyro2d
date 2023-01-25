@@ -1,3 +1,5 @@
+export type EaseFunction = (t: number, b: number, c: number, d: number) => number
+
 /**
  * Ease 类定义了缓动函数，以便实现 Tween 动画的缓动效果。
  */
@@ -15,7 +17,7 @@ export default class Ease {
    * @param	d 指定运动的持续时间。
    * @return 指定时间的插补属性的值。
    */
-  static linearNone(t: number, b: number, c: number, d: number): number {
+  static linear(t: number, b: number, c: number, d: number): number {
     return (c * t) / d + b;
   }
 

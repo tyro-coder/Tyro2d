@@ -14,6 +14,10 @@ import Sprite from './display/Sprite'
 /** Utils */
 import Utils from './utils/Utils'
 
+/** Other */
+import Ease from './tween/Ease'
+import Tween from './tween/Tween'
+
 import Tyro2d from './Tyro2d'
 
 export {
@@ -30,4 +34,6 @@ export {
   Sprite,
 
   Utils,
+  Tween,
+  Ease,
 }

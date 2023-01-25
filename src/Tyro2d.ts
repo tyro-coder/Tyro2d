@@ -53,7 +53,7 @@ export default class Tyro2d {
    */
   static destroy() {
     Tyro2d.stage.destroy()
-    Tyro2d.Tween.clearAll()
+    Tyro2d.Tween.removeAll()
     Tyro2d.eventBus.destroy()
     Tyro2d.ticker.stop()
     Tyro2d.ticker.clear()

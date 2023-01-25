@@ -27,6 +27,7 @@ export const HASH_OBJECT_TYPE = {
   // 物理类
   Bounds: addPrefix('Bounds'),
   // 缓动
+  Tween: addPrefix('Tween'),
 }
 
 export enum RENDER_TYPE {

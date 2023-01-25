@@ -21,12 +21,10 @@ export default class Texture extends EventDispatcher {
       const img = this.image = new Image()
       img.crossOrigin = 'anonymous'
       img.onload = () => {
-        console.log('加载成功')
         img.onload = null
         this.width = img.naturalWidth
         this.height = img.naturalHeight
         this.loaded = true
-        console.log(this)
         resolve(this)
       }
       img.src = src

@@ -1,6 +1,6 @@
 import './App.css'
 import { useEffect, useRef } from 'react'
-import { Tyro2d, Stage, Sprite, Node } from '../tyro2d'
+import { Tyro2d, Stage, Sprite, Node, Tween, Ease } from '../tyro2d'
 
 function App() {
   const gameRef = useRef()
@@ -21,35 +21,62 @@ function App() {
     Tyro2d.start(stage, 30)
 
     const node1 = new Node()
-    node1.width = 500
-    node1.height = 500
+    node1.x = 100
+    node1.y = 100
+    node1.anchorX = 50
+    node1.anchorY = 50
+    node1.width = 100
+    node1.height = 100
     node1.background = '#ff0000'
     stage.addChild(node1)
 
-    setTimeout(() => {
-      node1.x = 300
-    }, 2000)
+    Tween.to(node1, {
+      rotation: 360,
+    }, {
+      loop: true,
+      repeat: 2,
+      reverse: true,
+      duration: 2000,
+      ease: Ease.cubicInOut,
+      onComplete: (target) => {
+        console.log(target)
+      }
+    })
 
-    const bookSprite = new Sprite('//yun.dui88.com/cdfe/liaoningBOC-kanjia/shareIcon.png')
-    bookSprite.x = 71
-    bookSprite.y = 71
-    bookSprite.setScale(2, 2)
-    bookSprite.anchorX = 0.5
-    bookSprite.anchorY = 0.5
-    // bookSprite.rotation = 45
-    stage.addChild(bookSprite)
+    const node2 = new Node()
+    node2.x = 100
+    node2.y = 300
+    node2.anchorX = 50
+    node2.anchorY = 50
+    node2.width = 100
+    node2.height = 100
+    node2.background = '#00ff00'
+    stage.addChild(node2)
 
-    const container = new Node()
-    stage.addChild(container)
+    Tween.to(node2, {
+      x: 500,
+    }, {
+      duration: 2000,
+      ease: Ease.backInOut,
+    })
 
-    const sprite = new Sprite('//yun.dui88.com/cdfe/liaoningBOC-kanjia/shareIcon.png')
-    sprite.anchorX = 0
-    sprite.anchorY = 35
-    sprite.x = 0
-    sprite.y = 143
-    sprite.opacity = 0.5
-    sprite.rotation = 45
-    container.addChild(sprite)
+    const node3 = new Node()
+    node3.x = 100
+    node3.y = 500
+    node3.anchorX = 50
+    node3.anchorY = 50
+    node3.width = 100
+    node3.height = 100
+    node3.background = '#0000ff'
+    stage.addChild(node3)
+
+    Tween.to(node3, {
+      x: 500,
+      y: 800
+    }, {
+      duration: 2000,
+      ease: Ease.elasticInOut,
+    })
   }, [])
 
   return (
