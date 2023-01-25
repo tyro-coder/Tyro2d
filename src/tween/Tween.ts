@@ -25,8 +25,6 @@ export interface TweenParams {
   onComplete: (tween: Tween) => void;
 }
 
-export type ReverFlagType = 'Backward' | 'Forward'
-
 export default class Tween extends HashObject {
   static TweenList: Tween[] = []
 
@@ -241,7 +239,6 @@ export default class Tween extends HashObject {
     // 已经开始并且要求往复执行
     if (this.reverse && this.isStart) {
       if (this._reverseFlag < 0) {
-        console.log('reverseFlag < 0', elapsedTime)
         ratio = 1 - ratio
       }
       if (ratio < 1e-7) {

@@ -30,17 +30,6 @@ function App() {
     node1.background = '#ff0000'
     stage.addChild(node1)
 
-    Tween.to(node1, {
-      rotation: 360,
-    }, {
-      loop: true,
-      duration: 2000,
-      ease: Ease.cubicInOut,
-      onComplete: (target) => {
-        console.log(target)
-      }
-    })
-
     const node2 = new Node()
     node2.x = 100
     node2.y = 300
@@ -51,14 +40,34 @@ function App() {
     node2.background = '#00ff00'
     stage.addChild(node2)
 
-    Tween.to(node2, {
+    Tween.to(node1, {
+      rotation: 360,
+    }, {
+      loop: true,
+      duration: 2000,
+      ease: Ease.cubicInOut,
+      onComplete: (target) => {
+        console.log(target)
+      }
+    }).link(Tween.to(node2, {
       x: 500,
     }, {
       loop: true,
       repeat: 3,
       reverse: true,
       duration: 2000
-    })
+    }))
+
+    
+
+    // const node2Tween = new Tween(node2, null, {
+    //   x: 500,
+    // }, {
+    //   loop: true,
+    //   repeat: 3,
+    //   reverse: true,
+    //   duration: 2000
+    // })
 
     const node3 = new Node()
     node3.x = 100
@@ -76,6 +85,25 @@ function App() {
     }, {
       duration: 2000,
       ease: Ease.elasticInOut,
+    })
+
+    const node4 = new Node()
+    node4.x = 300
+    node4.y = 700
+    node4.anchorX = 50
+    node4.anchorY = 50
+    node4.width = 100
+    node4.height = 100
+    node4.background = '#c65306'
+    stage.addChild(node4)
+    Tween.to(node4, {
+      scaleX: 1.5,
+      scaleY: 1.5
+    }, {
+      loop: true,
+      duration: 1000,
+      reverse: true,
+      ease: Ease.linear,
     })
   }, [])
 
