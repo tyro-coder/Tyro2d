@@ -1,6 +1,45 @@
 {
   "name": "tyro2d",
   "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT"
+  "description": "A simple HTML5 game engine for 2D games.",
+  "main": "./dist/tyro2d.umd.js",
+  "module": "./dist/tyro2d.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/tyro2d.mjs",
+      "require": "./dist/tyro2d.umd.js"
+    }
+  },
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "prepublishOnly": "pnpm build",
+    "build": "vite build",
+    "start": "docusaurus start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "tyro2d",
+    "tyro",
+    "game engine",
+    "html5 game",
+    "2d game"
+  ],
+  "author": "kevin <zkevin1997@outlook>",
+  "license": "MIT",
+  "devDependencies": {
+    "@applint/spec": "^1.2.3",
+    "@docusaurus/core": "^2.4.1",
+    "@docusaurus/preset-classic": "^2.4.1",
+    "@docusaurus/types": "^2.4.1",
+    "@mdx-js/react": "^1.6.22",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "vite": "^4.3.9",
+    "vite-plugin-dts": "3.0.0-beta.3"
+  }
 }

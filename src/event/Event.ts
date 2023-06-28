@@ -1,15 +1,15 @@
-import HashObject from "../utils/HashObject";
+import HashObject from '../utils/HashObject';
 
 export default class Event extends HashObject {
-  public target: any
-
-  protected _instanceType: string = 'Event'
-
-  constructor() {
-    super()
+  destroy(): void {
+    throw new Error('Method not implemented.');
   }
 
-  destory(): void {
-    
+  public target: any;
+
+  protected _instanceType: string = 'Event';
+
+  constructor() {
+    super();
   }
 }

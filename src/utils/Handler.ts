@@ -4,21 +4,21 @@
  * 创建的 Handler 对象不再使用后，可以使用 Handler.recover() 方法将其回收到对象池，回收后不要再使用此对象，否则会出现不可预料的错误；
  */
 export default class Handler {
-  /**@private Handler 对象池 */
+  /** @private Handler 对象池 */
   protected static _pool: Handler[] = [];
-  /**@private */
+  /** @private */
   private static _gid: number = 1;
 
   /** 执行域(this) */
-  caller: Object | null = null;
+  caller: any = null;
   /** 回调方法 */
-  callback: Function | null = null;
+  callback: () => void = null;
   /** 参数 */
   args: any[] | null = null;
   /** 是否只执行一次，若为true，回调后自动执行 recover() 进行回收，回收后会被再利用，默认为 false */
   once: boolean = false;
 
-  /**@private */
+  /** @private */
   protected _id = 0;
 
   /**
@@ -28,7 +28,7 @@ export default class Handler {
    * @param args 函数参数
    * @param once 是否只执行一次
    */
-  constructor(caller: Object | null = null, callback: Function | null = null, args: any[] | null = null, once: boolean = false) {
+  constructor(caller: any | null = null, callback: () => void | null = null, args: any[] | null = null, once: boolean = false) {
       this.setTo(caller, callback, args, once);
   }
 
@@ -40,7 +40,7 @@ export default class Handler {
    * @param once 是否只执行一次
    * @returns 返回 handler 本身
    */
-  setTo(caller: Object | null = null, callback: Function | null = null, args: any[] | null = null, once: boolean = false): Handler {
+  setTo(caller: any | null = null, callback: () => void | null = null, args: any[] | null = null, once: boolean = false): Handler {
       this._id = Handler._gid++;
       this.caller = caller;
       this.callback = callback;
@@ -55,8 +55,8 @@ export default class Handler {
    */
   run(): any {
       if (this.callback == null) return null;
-      let id: number = this._id;
-      let result: any = this.callback.apply(this.caller, this.args);
+      const id: number = this._id;
+      const result: any = this.callback.apply(this.caller, this.args);
       // 如果 once 为 true 的话，执行完之后就清理当前 handler 实例
       this._id === id && this.once && this.recover();
       return result;
@@ -69,7 +69,7 @@ export default class Handler {
    */
   runWith(data: any): any {
       if (this.callback == null) return null;
-      let id: number = this._id;
+      const id: number = this._id;
       let result: any;
       if (data == null) {
           result = this.callback.apply(this.caller, this.args);
@@ -78,7 +78,7 @@ export default class Handler {
       } else if (this.args) {
           result = this.callback.apply(this.caller, this.args.concat(data));
       } else {
-          result = this.callback.apply(this.caller, data)
+          result = this.callback.apply(this.caller, data);
       }
       this._id === id && this.once && this.recover();
       return result;
@@ -101,7 +101,7 @@ export default class Handler {
   recover(): void {
       if (this._id > 0) {
           this._id = 0;
-          Handler._pool.push(this.clear())
+          Handler._pool.push(this.clear());
       }
   }
 
@@ -113,7 +113,7 @@ export default class Handler {
    * @param once 是否只执行一次，如果为true，回调后会直接回收，默认为true
    * @returns 返回创建的handler实例
    */
-  static create(caller: Object | null = null, callback: Function | null = null, args: any[] | null = null, once: boolean = true): Handler {
+  static create(caller: any | null = null, callback: () => void | null = null, args: any[] | null = null, once: boolean = true): Handler {
       if (Handler._pool.length) {
           return (Handler._pool.pop() as Handler).setTo(caller, callback, args, once);
       }
