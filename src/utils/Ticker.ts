@@ -1,5 +1,5 @@
-import Browser from "./Browser";
-import { ITickerHandler } from "./Constants";
+import Browser from './Browser';
+import { ITickerHandler } from './Constants';
 
 export default class Ticker {
   private _paused: boolean = true;
@@ -14,8 +14,8 @@ export default class Ticker {
   private _useRAF: boolean;
 
   constructor(fps: number = 60) {
-    this._targetFPS = fps
-    this._interval = 1000 / this._targetFPS
+    this._targetFPS = fps;
+    this._interval = 1000 / this._targetFPS;
   }
 
   /**
@@ -31,7 +31,7 @@ export default class Ticker {
       interval = this._interval,
       raf =
         window.requestAnimationFrame ||
-        (<any>window)[Browser.jsVendor + "RequestAnimationFrame"];
+        (window as any)[`${Browser.jsVendor}RequestAnimationFrame`];
 
     let runLoop: () => void;
     if (useRAF && raf && interval < 17) {
@@ -58,7 +58,7 @@ export default class Ticker {
     if (this._useRAF) {
       const cancelRAF =
         window.cancelAnimationFrame ||
-        (<any>window)[Browser.jsVendor + "CancelAnimationFrame"];
+        (window as any)[`${Browser.jsVendor}CancelAnimationFrame`];
       cancelRAF(this._intervalId);
     } else {
       clearTimeout(this._intervalId);
@@ -95,9 +95,9 @@ export default class Ticker {
    * @param tickObj 定时器对象
    */
   addTick(tickObj: ITickerHandler) {
-    if (!tickObj || typeof tickObj.tick != "function") {
+    if (!tickObj || typeof tickObj.tick != 'function') {
       throw new Error(
-        "Ticker: The tick object must implement the tick method."
+        'Ticker: The tick object must implement the tick method.',
       );
     }
     this._tickers.push(tickObj);
@@ -137,8 +137,8 @@ export default class Ticker {
    * 清空所有定时器
    */
   clear() {
-    const tickers = this._tickers
-    tickers.length = 0
+    const tickers = this._tickers;
+    tickers.length = 0;
   }
 
   /**
@@ -167,7 +167,7 @@ export default class Ticker {
    * 每隔一定的时间执行一次回调方法，类似 setInterval
    * @param callback 回调方法
    * @param duration 延时
-   * @returns 
+   * @returns
    */
   interval(callback: () => void, duration: number): ITickerHandler {
     const that = this;
@@ -191,7 +191,7 @@ export default class Ticker {
 
   /**
    * 每一帧执行的方法
-   * @returns 
+   * @returns
    */
   private _tick() {
     if (this._paused) return;
@@ -199,7 +199,7 @@ export default class Ticker {
       deltaTime = startTime - this._lastTime,
       tickers = this._tickers;
 
-    //calculates the real fps
+    // calculates the real fps
     if (++this._tickCount >= this._targetFPS) {
       this._measuredFPS =
         (1000 / (this._tickTime / this._tickCount) + 0.5) >> 0;

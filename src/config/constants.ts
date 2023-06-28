@@ -28,7 +28,7 @@ export const HASH_OBJECT_TYPE = {
   Bounds: addPrefix('Bounds'),
   // 缓动
   Tween: addPrefix('Tween'),
-}
+};
 
 export enum RENDER_TYPE {
   CANVAS,

@@ -4,9 +4,9 @@
  * 创建的 Handler 对象不再使用后，可以使用 Handler.recover() 方法将其回收到对象池，回收后不要再使用此对象，否则会出现不可预料的错误；
  */
 export default class Handler {
-  /**@private Handler 对象池 */
+  /** @private Handler 对象池 */
   protected static _pool: Handler[] = [];
-  /**@private */
+  /** @private */
   private static _gid: number = 1;
 
   /** 执行域(this) */
@@ -18,7 +18,7 @@ export default class Handler {
   /** 是否只执行一次，若为true，回调后自动执行 recover() 进行回收，回收后会被再利用，默认为 false */
   once: boolean = false;
 
-  /**@private */
+  /** @private */
   protected _id = 0;
 
   /**
@@ -78,7 +78,7 @@ export default class Handler {
       } else if (this.args) {
           result = this.callback.apply(this.caller, this.args.concat(data));
       } else {
-          result = this.callback.apply(this.caller, data)
+          result = this.callback.apply(this.caller, data);
       }
       this._id === id && this.once && this.recover();
       return result;
@@ -101,7 +101,7 @@ export default class Handler {
   recover(): void {
       if (this._id > 0) {
           this._id = 0;
-          Handler._pool.push(this.clear())
+          Handler._pool.push(this.clear());
       }
   }
 

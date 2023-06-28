@@ -1,12 +1,12 @@
-export type EaseFunction = (t: number, b: number, c: number, d: number) => number
+export type EaseFunction = (t: number, b: number, c: number, d: number) => number;
 
 /**
  * Ease 类定义了缓动函数，以便实现 Tween 动画的缓动效果。
  */
 export default class Ease {
-  /**@private */
+  /** @private */
   private static HALF_PI: number = Math.PI * 0.5;
-  /**@private */
+  /** @private */
   private static PI2: number = Math.PI * 2;
 
   /**
@@ -95,10 +95,8 @@ export default class Ease {
    */
   static bounceOut(t: number, b: number, c: number, d: number): number {
     if ((t /= d) < 1 / 2.75) return c * (7.5625 * t * t) + b;
-    else if (t < 2 / 2.75)
-      return c * (7.5625 * (t -= 1.5 / 2.75) * t + 0.75) + b;
-    else if (t < 2.5 / 2.75)
-      return c * (7.5625 * (t -= 2.25 / 2.75) * t + 0.9375) + b;
+    else if (t < 2 / 2.75) return c * (7.5625 * (t -= 1.5 / 2.75) * t + 0.75) + b;
+    else if (t < 2.5 / 2.75) return c * (7.5625 * (t -= 2.25 / 2.75) * t + 0.9375) + b;
     else return c * (7.5625 * (t -= 2.625 / 2.75) * t + 0.984375) + b;
   }
 
@@ -116,7 +114,7 @@ export default class Ease {
     b: number,
     c: number,
     d: number,
-    s: number = 1.70158
+    s: number = 1.70158,
   ): number {
     return c * (t /= d) * t * ((s + 1) * t - s) + b;
   }
@@ -135,10 +133,9 @@ export default class Ease {
     b: number,
     c: number,
     d: number,
-    s: number = 1.70158
+    s: number = 1.70158,
   ): number {
-    if ((t /= d * 0.5) < 1)
-      return c * 0.5 * (t * t * (((s *= 1.525) + 1) * t - s)) + b;
+    if ((t /= d * 0.5) < 1) return c * 0.5 * (t * t * (((s *= 1.525) + 1) * t - s)) + b;
     return (c / 2) * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2) + b;
   }
 
@@ -156,7 +153,7 @@ export default class Ease {
     b: number,
     c: number,
     d: number,
-    s: number = 1.70158
+    s: number = 1.70158,
   ): number {
     return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
   }
@@ -178,7 +175,7 @@ export default class Ease {
     c: number,
     d: number,
     a: number = 0,
-    p: number = 0
+    p: number = 0,
   ): number {
     let s: number;
     if (t == 0) return b;
@@ -214,7 +211,7 @@ export default class Ease {
     c: number,
     d: number,
     a: number = 0,
-    p: number = 0
+    p: number = 0,
   ): number {
     let s: number;
     if (t == 0) return b;
@@ -224,8 +221,7 @@ export default class Ease {
       a = c;
       s = p / 4;
     } else s = (p / Ease.PI2) * Math.asin(c / a);
-    if (t < 1)
-      return (
+    if (t < 1) return (
         -0.5 *
           (a *
             Math.pow(2, 10 * (t -= 1)) *
@@ -259,7 +255,7 @@ export default class Ease {
     c: number,
     d: number,
     a: number = 0,
-    p: number = 0
+    p: number = 0,
   ): number {
     let s: number;
     if (t == 0) return b;

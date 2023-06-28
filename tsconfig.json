@@ -1,31 +1,16 @@
 {
   "compilerOptions": {
-    "lib": ["DOM"],
-    "target": "es6",
-    "module": "es6",
-    "composite":true,
-    "stripInternal": true,
-    "removeComments": false,
-    "preserveConstEnums": true,
-    "noImplicitAny": true,
+    "module": "ESNext",
+    "target": "ESNext",
+    "jsx": "react",
+    "moduleResolution": "node",
+    "lib": ["ES2017", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "noUnusedLocals": true,
+    "noImplicitReturns": true,
     "noImplicitThis": true,
-    "strictFunctionTypes": true,
-    "noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
-    "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
-    "strictPropertyInitialization":false,
-    "suppressImplicitAnyIndexErrors": true,
-    "noEmit": false,
-    "declaration": true,
-    "declarationDir": "types",
-    "outDir": "dist",
-    "esModuleInterop": true
+    "noImplicitAny": true,
+    "skipLibCheck": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "example",
-    "test"
-  ]
+  "include": ["src"],
 }

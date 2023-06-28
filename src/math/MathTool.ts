@@ -6,7 +6,7 @@ export default class MathTool {
   /**
    * 将一个角度转换为弧度
    * @param angle 角度
-   * @returns 
+   * @returns
    */
   static degToRad(angle: number): number {
     return angle * MathTool.DEG_TO_RAD;
@@ -15,7 +15,7 @@ export default class MathTool {
   /**
    * 将一个弧度转换为角度
    * @param radians 弧度
-   * @returns 
+   * @returns
    */
   static radToDeg(radians: number): number {
     return radians * MathTool.RAD_TO_DEG;
@@ -26,7 +26,7 @@ export default class MathTool {
    * @param val 值
    * @param low 最低值
    * @param high 最高值
-   * @returns 
+   * @returns
    */
   static clamp(val: number, low: number, high: number): number {
     return val < low ? low : val > high ? high : val;
@@ -41,5 +41,4 @@ export default class MathTool {
   static randomNum(min: number, max: number): number {
     return (~~(Math.random() * (max - min)) + min);
   }
-
 }

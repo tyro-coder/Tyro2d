@@ -1,5 +1,0 @@
-export var RENDER_TYPE;
-(function (RENDER_TYPE) {
-    RENDER_TYPE[RENDER_TYPE["CANVAS"] = 0] = "CANVAS";
-    RENDER_TYPE[RENDER_TYPE["WEBGL"] = 1] = "WEBGL";
-})(RENDER_TYPE || (RENDER_TYPE = {}));

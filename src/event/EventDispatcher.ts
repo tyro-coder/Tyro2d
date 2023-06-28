@@ -5,11 +5,11 @@ import HashObject from '../utils/HashObject';
  * EventDispatcher 类是可调度事件的所有类的基类
  */
 export default class EventDispatcher extends HashObject {
-  protected _instanceType: string = 'EventDispatcher'
+  protected _instanceType: string = 'EventDispatcher';
   private _events: any;
 
   constructor() {
-    super()
+    super();
   }
 
   hasListener(type: string): boolean {
@@ -25,7 +25,7 @@ export default class EventDispatcher extends HashObject {
       if (listeners.once) delete this._events[type];
       data != null ? listeners.runWith(data) : listeners.run();
     } else {
-      for (let i: number=0, n: number = listeners.length; i < n; i++) {
+      for (let i = 0, n: number = listeners.length; i < n; i++) {
         const listener: EventHandler = listeners[i];
         if (listener) {
           data != null ? listener.runWith(data) : listener.run();
@@ -43,45 +43,45 @@ export default class EventDispatcher extends HashObject {
     return true;
   }
 
-  on(type: string, listener: () => void, caller: any, args: any[]|null = null): EventDispatcher {
+  on(type: string, listener: () => void, caller: any, args: any[] | null = null): EventDispatcher {
     return this._createListener(type, listener, caller, args, false);
   }
 
-  once(type: string, listener: () => void, caller: any, args: any[]|null = null): EventDispatcher {
+  once(type: string, listener: () => void, caller: any, args: any[] | null = null): EventDispatcher {
     return this._createListener(type, listener, caller, args, true);
   }
 
-  off(type: string, listener: () => void|null, caller: any, onceOnly: boolean = false): EventDispatcher {
+  off(type: string, listener: () => void | null, caller: any, onceOnly: boolean = false): EventDispatcher {
     if (!this._events || !this._events[type]) return this;
     const listeners: any = this._events[type];
     if (listeners != null) {
       if (listeners.run) {
         if (
-          (!caller || listeners.caller === caller)
-          && (listener == null || listeners.callback === listener)
-          && (!onceOnly || listeners.once)
+          (!caller || listeners.caller === caller) &&
+          (listener == null || listeners.callback === listener) &&
+          (!onceOnly || listeners.once)
         ) {
           delete this._events[type];
           listeners.recover();
         }
       } else {
-        let count: number = 0;
-        const n: number = listeners.length
-        for (let i: number =0; i < n; i++) {
+        let count = 0;
+        const n: number = listeners.length;
+        for (let i = 0; i < n; i++) {
           const item: EventHandler = listeners[i];
           if (!item) {
             count++;
             continue;
           }
           if (
-            item
-            && (!caller || listeners.caller === caller)
-            && (listener == null || listeners.callback === listener)
-            && (!onceOnly || listeners.once)
+            item &&
+            (!caller || listeners.caller === caller) &&
+            (listener == null || listeners.callback === listener) &&
+            (!onceOnly || listeners.once)
           ) {
             count++;
             listeners[i] = null;
-            item.recover()
+            item.recover();
           }
         }
         // 如果全部移除
@@ -115,7 +115,7 @@ export default class EventDispatcher extends HashObject {
     return this;
   }
 
-  private _createListener(type: string, listener: () => void, caller: any, args: any[]|null, once: boolean, offBefore: boolean = true): EventDispatcher {
+  private _createListener(type: string, listener: () => void, caller: any, args: any[] | null, once: boolean, offBefore: boolean = true): EventDispatcher {
     // 移除之前相同的监听
     offBefore && this.off(type, listener, caller, once);
 
@@ -125,8 +125,8 @@ export default class EventDispatcher extends HashObject {
     const events: any = this._events;
     if (!events[type]) events[type] = handler;
     else {
-      if (Array.isArray(events[type])) events[type].push(handler)
-      else events[type] = [events[type], handler]
+      if (Array.isArray(events[type])) events[type].push(handler);
+      else events[type] = [events[type], handler];
     }
     return this;
   }
@@ -136,7 +136,7 @@ export default class EventDispatcher extends HashObject {
     if (arr.run) {
       arr.recover();
     } else {
-      for (let i: number = 0; i < arr.length; i++) {
+      for (let i = 0; i < arr.length; i++) {
         if (arr[i]) {
           arr[i].recover();
           arr[i] = null;
@@ -146,16 +146,16 @@ export default class EventDispatcher extends HashObject {
   }
 
   destroy(): void {
-    
+
   }
 }
 
-/**@private */
+/** @private */
 class EventHandler extends Handler {
-  /**@private EventHandler 对象池 */
+  /** @private EventHandler 对象池 */
   protected static _pool: EventHandler[] = [];
 
-  constructor(caller: any, callback: () => void, args: any[]|null, once: boolean) {
+  constructor(caller: any, callback: () => void, args: any[] | null, once: boolean) {
     super(caller, callback, args, once);
   }
 
@@ -165,7 +165,7 @@ class EventHandler extends Handler {
   recover(): void {
       if (this._id > 0) {
         this._id = 0;
-        EventHandler._pool.push(this.clear())
+        EventHandler._pool.push(this.clear());
       }
   }
 
@@ -177,7 +177,7 @@ class EventHandler extends Handler {
 	 * @param once		（可选）是否只执行一次，如果为true，回调后执行recover()进行回收，默认为true。
 	 * @return 返回创建的 EventHandler 实例。
 	 */
-  static create(caller: any, callback: () => void, args: any[]|null = null, once: boolean = true): Handler {
+  static create(caller: any, callback: () => void, args: any[] | null = null, once: boolean = true): Handler {
       if (EventHandler._pool.length) return (EventHandler._pool.pop() as EventHandler).setTo(caller, callback, args, once);
       return new EventHandler(caller, callback, args, once);
   }

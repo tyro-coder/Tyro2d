@@ -1,3 +1,12 @@
-node_modules
-dist
-rollup.config.js
+# See https://eslint.org/docs/latest/user-guide/configuring/ignoring-code for more about ignoring files.
+
+node_modules/
+**/*-min.js
+**/*.min.js
+coverage/
+cjs/
+esm/
+es2017/
+dist/
+build/
+tmp/

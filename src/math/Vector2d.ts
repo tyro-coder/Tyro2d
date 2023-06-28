@@ -12,10 +12,10 @@ export default class Vector2d extends HashObject {
   public x: number = 0;
   public y: number = 0;
 
-  protected _instanceType: string = 'Vector2d'
+  protected _instanceType: string = 'Vector2d';
 
   constructor(x?: number, y?: number) {
-    super()
+    super();
     this.reset(x, y);
   }
 
@@ -24,7 +24,7 @@ export default class Vector2d extends HashObject {
    * @returns Vector2d对象
    */
   static create(): Vector2d {
-    return Pool.getInstanceByClass(POOL_SIGN.Vector2d, Vector2d)
+    return Pool.getInstanceByClass(POOL_SIGN.Vector2d, Vector2d);
   }
 
   reset(x: number = 0, y: number = 0): Vector2d {
@@ -34,17 +34,17 @@ export default class Vector2d extends HashObject {
   }
 
   clear() {
-    this.x = 0
-    this.y = 0
+    this.x = 0;
+    this.y = 0;
   }
 
   /**
    * 回收该对象
-   * @returns 
+   * @returns
    */
   recover(): void {
     if (this === Vector2d.EMPTY) return;
-    this.clear()
+    this.clear();
     Pool.recover(POOL_SIGN.Vector2d, this);
   }
 
@@ -78,7 +78,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 将向量转为2d坐标
-   * @returns 
+   * @returns
    */
   to2d(): Vector2d {
     return this._set(this.y + this.x / 2, this.y - this.x / 2);
@@ -91,7 +91,7 @@ export default class Vector2d extends HashObject {
   /**
    * 向量除以某个值
    * @param n 值
-   * @returns 
+   * @returns
    */
   div(n: number): Vector2d {
     return this._set(this.x / n, this.y / n);
@@ -99,7 +99,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 绝对值化向量
-   * @returns 
+   * @returns
    */
   abs(): Vector2d {
     return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y);
@@ -109,7 +109,7 @@ export default class Vector2d extends HashObject {
    * 获取一个新的锁定在范围内的向量
    * @param low 最小值
    * @param high 最大值
-   * @returns 
+   * @returns
    */
   clamp(low: number, high: number): Vector2d {
     return Vector2d.create().set(MathTool.clamp(this.x, low, high), MathTool.clamp(this.y, low, high));
@@ -122,13 +122,13 @@ export default class Vector2d extends HashObject {
    * @returns
    */
   clampSelf(low: number, high: number): Vector2d {
-    return this._set(MathTool.clamp(this.x, low, high), MathTool.clamp(this.y, low, high))
+    return this._set(MathTool.clamp(this.x, low, high), MathTool.clamp(this.y, low, high));
   }
 
   /**
    * 比较向量，并将本向量更新为最小的那个
    * @param v 比较的向量
-   * @returns 
+   * @returns
    */
   minV(v: Vector2d): Vector2d {
     return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y);
@@ -137,7 +137,7 @@ export default class Vector2d extends HashObject {
   /**
    * 比较向量，并将本向量更新为最大的那个
    * @param v 比较的向量
-   * @returns 
+   * @returns
    */
   maxV(v: Vector2d): Vector2d {
     return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y);
@@ -145,7 +145,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 获得一个新的向下取整的向量
-   * @returns 
+   * @returns
    */
   floor(): Vector2d {
     return Vector2d.create().set(Math.floor(this.x), Math.floor(this.y));
@@ -153,7 +153,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 向下取整本向量
-   * @returns 
+   * @returns
    */
   floorSelf(): Vector2d {
     return this._set(Math.floor(this.x), Math.floor(this.y));
@@ -161,7 +161,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 获得一个新的向上取整向量
-   * @returns 
+   * @returns
    */
   ceil(): Vector2d {
     return Vector2d.create().set(Math.ceil(this.x), Math.ceil(this.y));
@@ -169,7 +169,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 向上取整本向量
-   * @returns 
+   * @returns
    */
   ceilSelf(): Vector2d {
     return this._set(Math.ceil(this.x), Math.ceil(this.y));
@@ -184,7 +184,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 取负值本向量
-   * @returns 
+   * @returns
    */
   negateSelf(): Vector2d {
     return this._set(-this.x, -this.y);
@@ -194,8 +194,9 @@ export default class Vector2d extends HashObject {
     return this._set(v.x, v.y);
   }
 
-  equal(x: number|Vector2d, y?: number): boolean {
-    let _x: number, _y: number;
+  equal(x: number | Vector2d, y?: number): boolean {
+    let _x: number,
+_y: number;
     if (typeof x === 'number' && typeof y === 'number') {
       _x = x;
       _y = y;
@@ -208,7 +209,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 将向量单位化
-   * @returns 
+   * @returns
    */
   normalize(): Vector2d {
     return this.div(this.length() || 1);
@@ -225,10 +226,11 @@ export default class Vector2d extends HashObject {
    * 旋转本向量
    * @param angle 旋转角度
    * @param v 可选的旋转参考向量
-   * @returns 
+   * @returns
    */
   rotate(angle: number, v?: Vector2d): Vector2d {
-    let cx = 0, cy = 0;
+    let cx = 0,
+cy = 0;
     if (v && typeof v === 'object') {
       cx = v.x;
       cy = v.y;
@@ -240,13 +242,13 @@ export default class Vector2d extends HashObject {
     const c = Math.cos(angle);
     const s = Math.sin(angle);
 
-    return this._set(x*c - y*s + cx, x*s + y*c + cy);
+    return this._set(x * c - y * s + cx, x * s + y * c + cy);
   }
 
   /**
    * 获取这个向量和目标向量的点积
    * @param v 目标向量
-   * @returns 
+   * @returns
    */
   dotProduct(v: Vector2d): number {
     return this.x * v.x + this.y * v.y;
@@ -254,7 +256,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 获取本向量的平方长度
-   * @returns 
+   * @returns
    */
   length2(): number {
     return this.dotProduct(this);
@@ -262,7 +264,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 获取向量的长度
-   * @returns 
+   * @returns
    */
   length(): number {
     return Math.sqrt(this.length2());
@@ -271,17 +273,18 @@ export default class Vector2d extends HashObject {
   /**
    * 获取与目标向量的距离
    * @param v 目标向量
-   * @returns 
+   * @returns
    */
   distance(v: Vector2d): number {
-    const dx = this.x - v.x, dy = this.y - v.y;
+    const dx = this.x - v.x,
+dy = this.y - v.y;
     return Math.sqrt(dx * dx + dy * dy);
   }
 
   /**
    * 获取与目标向量之间的夹角
    * @param v 目标向量
-   * @returns 
+   * @returns
    */
   angle(v: Vector2d): number {
     return Math.acos(MathTool.clamp(this.dotProduct(v) / (this.length() * v.length()), -1, 1));
@@ -290,7 +293,7 @@ export default class Vector2d extends HashObject {
   /**
    * 将本向量投射到目标向量上
    * @param v 目标向量
-   * @returns 
+   * @returns
    */
   project(v: Vector2d): Vector2d {
     return this.scale(this.dotProduct(v) / v.length2());
@@ -298,7 +301,7 @@ export default class Vector2d extends HashObject {
 
   /**
    * 获得一个此向量的克隆副本
-   * @returns 
+   * @returns
    */
   clone(): Vector2d {
     return Vector2d.create().set(this.x, this.y);
@@ -309,17 +312,17 @@ export default class Vector2d extends HashObject {
    * @param mtx 应用转换的矩阵
    * @param round 是否对应向量坐标进行向上取整
    * @param returnNew 是否返回一个新的向量
-   * @returns 
+   * @returns
    */
   transform(mtx: Matrix2d, round: boolean = false, returnNew: boolean = true): Vector2d {
     let x = this.x * mtx.a + this.y * mtx.c + mtx.dx,
       y = this.x * mtx.b + this.y * mtx.d + mtx.dy;
-    
+
     if (round) {
       x = x + 0.5 >> 0;
       y = y + 0.5 >> 0;
     }
-    if (returnNew) return new Vector2d(x, y)
+    if (returnNew) return new Vector2d(x, y);
     this.x = x;
     this.y = y;
     return this;
