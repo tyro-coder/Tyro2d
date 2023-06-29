@@ -19,7 +19,9 @@
     "preinstall": "npx only-allow pnpm",
     "prepublishOnly": "pnpm build",
     "build": "vite build",
-    "start": "docusaurus start",
+    "dev": "vite build -w",
+    "start": "concurrently \"pnpm run dev\" \"pnpm run doc:start\"",
+    "doc:start": "docusaurus start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -37,8 +39,10 @@
     "@docusaurus/preset-classic": "^2.4.1",
     "@docusaurus/types": "^2.4.1",
     "@mdx-js/react": "^1.6.22",
+    "concurrently": "^8.2.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "styled-components": "^6.0.1",
     "vite": "^4.3.9",
     "vite-plugin-dts": "3.0.0-beta.3"
   }
