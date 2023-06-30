@@ -1,4 +1,4 @@
-import { HASH_OBJECT_TYPE } from '../config/constants';
+import { ENGINE_OBJECT_TYPE } from '../common/constants';
 import Node from '../display/Node';
 import Browser from '../utils/Browser';
 import HashObject from '../utils/HashObject';
@@ -107,7 +107,7 @@ export default class Tween extends HashObject {
   /** 重复次数，0为无限重复 */
   private _repeatCount: number = 0;
 
-  protected _instanceType: string = HASH_OBJECT_TYPE.Tween;
+  protected _instanceType: string = ENGINE_OBJECT_TYPE.Tween;
 
   constructor(target: Node, fromProps: TargetProps, toProps: TargetProps, params: TweenParams) {
     super();
@@ -201,7 +201,7 @@ export default class Tween extends HashObject {
 
   link(tween: Tween): Tween {
     const { delay } = tween,
-startTime = this._startTime;
+      startTime = this._startTime;
     tween._startTime = startTime + this.duration + delay;
     this._next = tween;
     Tween.remove(tween);
@@ -235,7 +235,7 @@ startTime = this._startTime;
     const elapsedTime = time - this._startTime - this._pausedTime + this._seekTime;
     if (elapsedTime < 0) return false;
     let ratio = elapsedTime / this.duration;
-    ratio = (ratio <= 0 ? 0 : ratio >= 1 ? 1 : ratio);
+    ratio = ratio <= 0 ? 0 : ratio >= 1 ? 1 : ratio;
 
     // 已经开始并且要求往复执行
     if (this.reverse && this.isStart) {
@@ -272,7 +272,7 @@ startTime = this._startTime;
         this._startTime = Browser.now;
         this._pausedTime = 0;
         this._reverseFlag *= -1;
-      } else if (this.loop || this.repeat > 0 && this._repeatCount++ < this.repeat) {
+      } else if (this.loop || (this.repeat > 0 && this._repeatCount++ < this.repeat)) {
         this._startTime = Browser.now + this.repeatDelay;
         this._pausedTime = 0;
       } else {

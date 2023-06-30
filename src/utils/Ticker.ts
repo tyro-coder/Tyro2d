@@ -1,16 +1,30 @@
 import Browser from './Browser';
-import { ITickerHandler } from './Constants';
 
+/** 定时触发类接口实现 */
+export interface ITickerHandler {
+  tick: (dt: number) => void;
+}
+
+/**
+ * 定时器类
+ */
 export default class Ticker {
+  /** 是否暂停 */
   private _paused: boolean = true;
+  /** 预期帧率 */
   private _targetFPS: number = 0;
+  /** 实际帧率 */
+  private _measuredFPS: number = 0;
+  /** 每帧间隔 ms */
   private _interval: number = 0;
+  /** 定时器 id */
   private _intervalId: number = null;
+  /** 定时器触发类数组 */
   private _tickers: ITickerHandler[] = [];
+  /** 上一帧时间 ms */
   private _lastTime: number = 0;
   private _tickCount: number = 0;
   private _tickTime: number = 0;
-  private _measuredFPS: number = 0;
   private _useRAF: boolean;
 
   constructor(fps: number = 60) {
@@ -29,9 +43,7 @@ export default class Ticker {
 
     const self = this,
       interval = this._interval,
-      raf =
-        window.requestAnimationFrame ||
-        (window as any)[`${Browser.jsVendor}RequestAnimationFrame`];
+      raf = window.requestAnimationFrame || (window as any)[`${Browser.jsVendor}RequestAnimationFrame`];
 
     let runLoop: () => void;
     if (useRAF && raf && interval < 17) {
@@ -56,12 +68,10 @@ export default class Ticker {
    */
   stop() {
     if (this._useRAF) {
-      const cancelRAF =
-        window.cancelAnimationFrame ||
-        (window as any)[`${Browser.jsVendor}CancelAnimationFrame`];
+      const cancelRAF = window.cancelAnimationFrame || (window as any)[`${Browser.jsVendor}CancelAnimationFrame`];
       cancelRAF(this._intervalId);
     } else {
-      clearTimeout(this._intervalId);
+      window.clearTimeout(this._intervalId);
     }
 
     this._intervalId = null;
@@ -94,11 +104,9 @@ export default class Ticker {
    * 添加定时器对象
    * @param tickObj 定时器对象
    */
-  addTick(tickObj: ITickerHandler) {
+  addTicker(tickObj: ITickerHandler) {
     if (!tickObj || typeof tickObj.tick != 'function') {
-      throw new Error(
-        'Ticker: The tick object must implement the tick method.',
-      );
+      throw new Error('Ticker: The tick object must implement the tick method.');
     }
     this._tickers.push(tickObj);
   }
@@ -107,7 +115,7 @@ export default class Ticker {
    * 移除定时器对象
    * @param tickObj 定时器对象
    */
-  removeTick(tickObj: ITickerHandler) {
+  removeTicker(tickObj: ITickerHandler) {
     const tickers = this._tickers,
       index = tickers.indexOf(tickObj);
     if (index >= 0) {
@@ -116,20 +124,20 @@ export default class Ticker {
   }
 
   /**
-   * 下次定时回调
+   * 在下一帧执行
    * @param callback 回调方法
    * @returns
    */
-  nextTick(callback: () => void) {
-    const that = this;
+  nextTick(callback: (dt: number) => void) {
+    const self = this;
     const tickObj: ITickerHandler = {
       tick: function (dt: number) {
-        that.removeTick(tickObj);
-        callback && callback();
+        self.removeTicker(tickObj);
+        callback && callback(dt);
       },
     };
 
-    that.addTick(tickObj);
+    self.addTicker(tickObj);
     return tickObj;
   }
 
@@ -154,12 +162,12 @@ export default class Ticker {
         const nowTime = Browser.now;
         const dt = nowTime - targetTime;
         if (dt >= 0) {
-          that.removeTick(tickObj);
+          that.removeTicker(tickObj);
           callback();
         }
       },
     };
-    that.addTick(tickObj);
+    that.addTicker(tickObj);
     return tickObj;
   }
 
@@ -185,7 +193,7 @@ export default class Ticker {
         }
       },
     };
-    that.addTick(tickObj);
+    that.addTicker(tickObj);
     return tickObj;
   }
 
@@ -199,10 +207,9 @@ export default class Ticker {
       deltaTime = startTime - this._lastTime,
       tickers = this._tickers;
 
-    // calculates the real fps
+    // 计算真实的 fps
     if (++this._tickCount >= this._targetFPS) {
-      this._measuredFPS =
-        (1000 / (this._tickTime / this._tickCount) + 0.5) >> 0;
+      this._measuredFPS = (1000 / (this._tickTime / this._tickCount) + 0.5) >> 0;
       this._tickCount = 0;
       this._tickTime = 0;
     } else {

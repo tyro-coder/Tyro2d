@@ -3,7 +3,7 @@ import Utils from '../utils/Utils';
 import Node from './Node';
 import { ITickerHandler, IViewPort } from '../utils/Constants';
 import CanvasRenderer from '../renderer/CanvasRenderer';
-import { HASH_OBJECT_TYPE, RENDER_TYPE } from '../config/constants';
+import { ENGINE_OBJECT_TYPE, RENDER_TYPE } from '../common/constants';
 
 export default class Stage extends Node implements ITickerHandler {
   public canvas: HTMLCanvasElement;
@@ -14,7 +14,7 @@ export default class Stage extends Node implements ITickerHandler {
   public prevScaleX: number = 1;
   public prevScaleY: number = 1;
 
-  protected _instanceType: string = HASH_OBJECT_TYPE.Stage;
+  protected _instanceType: string = ENGINE_OBJECT_TYPE.Stage;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -34,14 +34,15 @@ export default class Stage extends Node implements ITickerHandler {
   }
 
   /**
-   * 更新舞台在页面中的可视区域，即渲染区域。当 Canvas 的样式border|margin|padding等属性更改后，需要调用此方法更新舞台渲染区域
+   * 更新舞台在页面中的可视区域，即渲染区域。当 Canvas 的样式 border|margin|padding 等属性更改后，需要调用此方法更新舞台渲染区域
    * @returns 舞台的可视区域
    */
   updateViewport() {
     const { canvas } = this;
     let viewport: IViewPort;
     if (canvas.parentNode) {
-      viewport = this.viewport = Utils.getElementViewRect(canvas);
+      viewport = Utils.getElementViewRect(canvas);
+      this.viewport = viewport;
     }
     return viewport;
   }
