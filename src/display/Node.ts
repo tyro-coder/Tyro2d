@@ -1,4 +1,5 @@
-import { HASH_OBJECT_TYPE } from './../config/constants';
+import type * as CSSType from 'csstype';
+import { ENGINE_OBJECT_TYPE } from '../common/constants';
 import EventDispatcher from '../event/EventDispatcher';
 import Matrix2d from '../math/Matrix2d';
 import Renderer from '../renderer/Renderer';
@@ -14,7 +15,7 @@ export default class Node extends EventDispatcher {
 
   public $_GID: number;
   /** 节点的背景颜色 */
-  public background: string | CanvasGradient | CanvasPattern = '';
+  public background: CSSType.Property.Color;
   /** 节点是否可见，默认为true */
   public visible: boolean = true;
   /** 节点的名字 */
@@ -27,10 +28,10 @@ export default class Node extends EventDispatcher {
   public blendMode: GlobalCompositeOperation = 'source-over';
 
   /** 节点实例类型 */
-  protected _instanceType: string = HASH_OBJECT_TYPE.Node;
-  /** 节点x轴位置 */
+  protected _instanceType: string = ENGINE_OBJECT_TYPE.Node;
+  /** 节点相对父节点 x 轴位置 */
   protected _x: number = 0;
-  /** 节点y轴位置 */
+  /** 节点相对父节点 y 轴位置 */
   protected _y: number = 0;
   /** 节点宽度 */
   protected _width: number = 0;
@@ -56,7 +57,7 @@ export default class Node extends EventDispatcher {
   protected _parent: Node | null = null;
   /** 节点的变换实例 */
   protected _transform: Matrix2d;
-  /** 子对象集合 */
+  /** 子节点数组 */
   protected _children: Node[] = Node.ARRAY_EMPTY;
 
   constructor() {
@@ -74,6 +75,7 @@ export default class Node extends EventDispatcher {
       this._opacity = val;
     }
   }
+
   /** 相对父容器的x轴偏移量 */
   get x(): number {
     return this._x;
@@ -83,6 +85,7 @@ export default class Node extends EventDispatcher {
       this._x = val;
     }
   }
+
   /** 相对父容器的y轴偏移量 */
   get y(): number {
     return this._y;
@@ -103,6 +106,7 @@ export default class Node extends EventDispatcher {
     this.y = y;
     return this;
   }
+
   /** 节点的宽 */
   get width(): number {
     return this._width;
@@ -112,6 +116,7 @@ export default class Node extends EventDispatcher {
       this._width = val;
     }
   }
+
   /** 节点的高 */
   get height(): number {
     return this._height;
@@ -121,6 +126,7 @@ export default class Node extends EventDispatcher {
       this._height = val;
     }
   }
+
   /** x轴缩放 */
   get scaleX(): number {
     return this._scaleX;
@@ -130,6 +136,7 @@ export default class Node extends EventDispatcher {
       this._scaleX = val;
     }
   }
+
   /** y轴缩放值 */
   get scaleY(): number {
     return this._scaleY;
@@ -139,6 +146,7 @@ export default class Node extends EventDispatcher {
       this._scaleY = val;
     }
   }
+
   /**
    * 设置缩放量
    * @param x x轴缩放倍数
@@ -150,6 +158,7 @@ export default class Node extends EventDispatcher {
     this.scaleY = y;
     return this;
   }
+
   /** 旋转角度 */
   get rotation(): number {
     return this._rotation;
@@ -159,10 +168,12 @@ export default class Node extends EventDispatcher {
       this._rotation = val;
     }
   }
+
   /** 变换矩阵 */
   get transform(): Matrix2d {
     return this._transform;
   }
+
   /** x轴锚点 */
   get anchorX(): number {
     return this._anchorX;
@@ -172,6 +183,7 @@ export default class Node extends EventDispatcher {
       this._anchorX = val;
     }
   }
+
   /** y轴锚点 */
   get anchorY(): number {
     return this._anchorY;
@@ -181,6 +193,7 @@ export default class Node extends EventDispatcher {
       this._anchorY = val;
     }
   }
+
   /**
    * 设置锚点
    * @param x x轴锚点位置
@@ -192,6 +205,7 @@ export default class Node extends EventDispatcher {
     this.anchorY = y;
     return this;
   }
+
   /** 是否销毁 */
   get destroyed(): boolean {
     return this._destroyed;
@@ -201,6 +215,7 @@ export default class Node extends EventDispatcher {
       this._destroyed = val;
     }
   }
+
   /** 父节点 */
   get parent(): Node | null {
     return this._parent;
@@ -210,11 +225,12 @@ export default class Node extends EventDispatcher {
       this._parent = p;
     }
   }
+
   /** 子节点数组 */
   get children(): Node[] {
     return this._children;
   }
-  /** 字节点数目 */
+  /** 子节点数组 */
   get childrenNum(): number {
     return this._children.length;
   }
@@ -228,8 +244,9 @@ export default class Node extends EventDispatcher {
   /**
    * 帧循环监听
    * @param delta 距离上一帧的时间
-   * @returns {boolean} 返回false的话，不会对本对象进行渲染
+   * @returns {boolean} 返回false的话，不会对本节点进行渲染
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onUpdate(delta: number): boolean {
     return true;
   }
@@ -269,6 +286,7 @@ export default class Node extends EventDispatcher {
     }
     return child;
   }
+
   /**
    * 添加子节点到指定的索引位置
    * @param child 节点对象
@@ -294,6 +312,7 @@ export default class Node extends EventDispatcher {
       throw new Error('addChildAt: The index is out of bounds');
     }
   }
+
   /**
    * 批量增加子节点
    * @param ...args 无数子节点
@@ -400,10 +419,10 @@ export default class Node extends EventDispatcher {
   /**
    * 删除指定索引区间的所有子对象
    * @param beginIndex 开始索引
-   * @param endIndex 索引
+   * @param endIndex 结束索引
    * @returns 当前节点对象
    */
-  removeChildren(beginIndex: number = 0, endIndex: number = 0x7fffffff): Node {
+  removeChildren(beginIndex: number = 0, endIndex: number = Number.MAX_SAFE_INTEGER): Node {
     if (this._children && this._children.length > 0) {
       let childs: any[] = this._children;
       if (beginIndex === 0 && endIndex >= childs.length - 1) {
@@ -435,12 +454,14 @@ export default class Node extends EventDispatcher {
     return null;
   }
 
-    /**
+  /**
    * 子节点发生改变
    * @param child 子节点
    */
-    protected _childChanged(child: Node = null) {
-    }
+  protected _childChanged(child: Node = null) {
+    // TODO: 待完成
+    console.log(child);
+  }
 
   /**
    * 当前容器内是否包含指定的子节点对象
@@ -467,30 +488,26 @@ export default class Node extends EventDispatcher {
 
     for (let o: Node = this; o !== ancestor && o.parent; o = o.parent) {
       let cos = 1,
-sin = 0;
-      const rotation = o.rotation % 360,
-        { anchorX } = o,
-        { anchorY } = o,
-        { scaleX } = o,
-        { scaleY } = o,
-        { transform } = o;
+        sin = 0;
+      const rotation = o.rotation % 360;
+      const { anchorX, anchorY, scaleX, scaleY, transform } = o;
 
-        if (transform !== Matrix2d.EMPTY) {
-          mtx.concat(transform);
-        } else {
-          if (rotation) {
-            const r = rotation * MathTool.DEG_TO_RAD;
-            cos = Math.cos(r);
-            sin = Math.sin(r);
-          }
-
-          if (anchorX !== 0) mtx.dx -= anchorX;
-          if (anchorY !== 0) mtx.dy -= anchorY;
-
-          // TODO: 后续有对齐方案的话，加在这里
-
-          mtx.concat(new Matrix2d(cos * scaleX, sin * scaleX, -sin * scaleY, cos * scaleY, o.x, o.y));
+      if (transform === Matrix2d.EMPTY) {
+        if (rotation) {
+          const r = rotation * MathTool.DEG_TO_RAD;
+          cos = Math.cos(r);
+          sin = Math.sin(r);
         }
+
+        if (anchorX !== 0) mtx.dx -= anchorX;
+        if (anchorY !== 0) mtx.dy -= anchorY;
+
+        // TODO: 后续有对齐方案的话，加在这里
+
+        mtx.concat(new Matrix2d(cos * scaleX, sin * scaleX, -sin * scaleY, cos * scaleY, o.x, o.y));
+      } else {
+        mtx.concat(transform);
+      }
     }
 
     return mtx;
@@ -502,11 +519,11 @@ sin = 0;
    */
   getBounds(): Bounds {
     const w = this.width,
-h = this.height,
+      h = this.height,
       mtx = this.getConcatenatedMatrix(),
       poly: Vector2d[] = [new Vector2d(0, 0), new Vector2d(w, 0), new Vector2d(w, h), new Vector2d(0, h)];
-    let point: Vector2d,
-vertexs: Vector2d[];
+    let point: Vector2d;
+    let vertexs: Vector2d[];
 
     for (let i = 0, len = poly.length; i < len; i++) {
       point = poly[i].transform(mtx, true, true);

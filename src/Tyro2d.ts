@@ -17,12 +17,10 @@ export default class Tyro2d {
    * @returns
    */
   static start(stage: Stage, fps: number) {
-    if (Tyro2d.stage) return;
-
     Tyro2d.stage = stage;
     Tyro2d.ticker = new Ticker(fps);
-    Tyro2d.ticker.addTick(stage);
-    Tyro2d.ticker.addTick(Tween);
+    Tyro2d.ticker.addTicker(stage);
+    Tyro2d.ticker.addTicker(Tween);
 
     Tyro2d.ticker.start();
   }

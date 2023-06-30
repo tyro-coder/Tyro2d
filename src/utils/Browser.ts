@@ -1,3 +1,6 @@
+/**
+ * 浏览器方法类
+ */
 export default class Browser {
   private static _initd: boolean = false;
   /** @private */
@@ -31,7 +34,7 @@ export default class Browser {
   }
 
   /**
-   * 获取body的DOM实例
+   * 获取 body 的 DOM 实例
    * @returns Body Element
    */
   static get docElem(): HTMLElement {
@@ -79,12 +82,13 @@ export default class Browser {
   /** 获得设备像素比。 */
   static get pixelRatio(): number {
     if (Browser._pixelRatio < 0) {
-        Browser.__init__();
-        if (Browser.userAgent.indexOf('Mozilla/6.0(Linux; Android 6.0; HUAWEI NXT-AL10 Build/HUAWEINXT-AL10)') > -1) Browser._pixelRatio = 2;
-        else {
-            Browser._pixelRatio = (Browser._window.devicePixelRatio || 1);
-            if (Browser._pixelRatio < 1) Browser._pixelRatio = 1;
-        }
+      Browser.__init__();
+      if (Browser.userAgent.indexOf('Mozilla/6.0(Linux; Android 6.0; HUAWEI NXT-AL10 Build/HUAWEINXT-AL10)') > -1) {
+        Browser._pixelRatio = 2;
+      } else {
+        Browser._pixelRatio = Browser._window.devicePixelRatio || 1;
+        if (Browser._pixelRatio < 1) Browser._pixelRatio = 1;
+      }
     }
     return Browser._pixelRatio;
   }
@@ -98,11 +102,13 @@ export default class Browser {
 
   static __init__(): Window {
     if (Browser._initd) return Browser._window;
-    const win: Window = Browser._window = window;
-    const doc: Document = Browser._document = win.document;
-    const ua: string = Browser._userAgent = win.navigator.userAgent;
-    const maxTouchPoints: number = win.navigator.maxTouchPoints || 0;
-    const { platform } = win.navigator;
+    Browser._window = window;
+    Browser._document = window.document;
+    Browser._userAgent = window.navigator.userAgent;
+
+    // const win: Window = Browser._window;
+    const ua: string = Browser._userAgent;
+    // const maxTouchPoints: number = win.navigator.maxTouchPoints || 0;
 
     Browser._isIos = /iphone|ipad|ipod/i.test(ua);
     Browser._isAndroid = /android/i.test(ua);
@@ -111,7 +117,7 @@ export default class Browser {
       webkit: /webkit/i.test(ua) || /firefox/i.test(ua),
       o: /opera/i.test(ua),
     };
-    Browser._jsVendor = Object.keys(jsVendorMap).find(key => jsVendorMap[key]) || '';
+    Browser._jsVendor = Object.keys(jsVendorMap).find((key) => jsVendorMap[key]) || '';
 
     Browser._initd = true;
     return Browser._window;

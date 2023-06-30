@@ -27,7 +27,7 @@
     "**/node_modules": true,
     "**/dist": true,
     "**/.docusaurus": true,
-    "**/docs": true,
+    "**/docs": true
   },
   "files.exclude": {
     "**/.git": true,
@@ -80,5 +80,6 @@
   },
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "cSpell.words": ["csstype"]
 }

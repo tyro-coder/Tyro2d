@@ -1,4 +1,4 @@
-import { HASH_OBJECT_TYPE, RENDER_TYPE } from './../config/constants';
+import { ENGINE_OBJECT_TYPE, RENDER_TYPE } from '../common/constants';
 import Renderer from './Renderer';
 import Node from '../display/Node';
 import { MathTool, Stage, Sprite } from '../index';
@@ -8,7 +8,7 @@ export default class CanvasRenderer extends Renderer {
   renderType: RENDER_TYPE = RENDER_TYPE.CANVAS;
   declare context: CanvasRenderingContext2D;
 
-  protected _instanceType: string = HASH_OBJECT_TYPE.CanvasRenderer;
+  protected _instanceType: string = ENGINE_OBJECT_TYPE.Renderer;
 
   constructor(canvas: HTMLCanvasElement) {
     super();
@@ -18,17 +18,19 @@ export default class CanvasRenderer extends Renderer {
   }
 
   startDraw(target: Node): boolean {
-    if (target.visible && target.opacity > 0) {
-      if (target.instanceType === HASH_OBJECT_TYPE.Stage) {
-        this.context.clearRect(0, 0, target.width, target.height);
-      }
-      if (target.blendMode !== this.blendMode) {
-        this.context.globalCompositeOperation = this.blendMode = target.blendMode;
-      }
-      this.context.save();
-      return true;
+    if (!target.visible || target.opacity === 0) {
+      return false;
     }
-    return false;
+    if (target.instanceType === ENGINE_OBJECT_TYPE.Stage) {
+      // 舞台重绘，直接清除整个 Canvas 内容
+      this.context.clearRect(0, 0, target.width, target.height);
+    }
+    if (target.blendMode !== this.blendMode) {
+      this.blendMode = target.blendMode;
+      this.context.globalCompositeOperation = target.blendMode;
+    }
+    this.context.save();
+    return true;
   }
 
   draw(target: Node): void {
@@ -42,7 +44,8 @@ export default class CanvasRenderer extends Renderer {
       ctx.fillRect(0, 0, w, h);
     }
 
-    if (target.instanceType === HASH_OBJECT_TYPE.Sprite) {
+    // 绘制精灵图
+    if (target.instanceType === ENGINE_OBJECT_TYPE.Sprite) {
       const sprite = target as Sprite;
       const img = sprite.texture.image,
         sw = sprite.texture.width,
@@ -58,17 +61,11 @@ export default class CanvasRenderer extends Renderer {
   }
 
   transform(target: Node): void {
-    const ctx = this.context,
-      { transform } = target,
-      { x } = target,
-      { y } = target,
-      rotation = target.rotation % 360,
-      { anchorX } = target,
-      { anchorY } = target,
-      { scaleX } = target,
-      { scaleY } = target;
+    const ctx = this.context;
+    const rotation = target.rotation % 360;
+    const { transform, x, y, anchorX, anchorY, scaleX, scaleY } = target;
 
-    if (target.instanceType === 'Stage') {
+    if (target.instanceType === ENGINE_OBJECT_TYPE.Stage) {
       const stage = target as Stage;
       const { style } = this.canvas,
         oldScaleX = stage.prevScaleX,
@@ -92,28 +89,25 @@ export default class CanvasRenderer extends Renderer {
 
       // TODO: 对齐方式
 
-      if (transform !== Matrix2d.EMPTY) {
-        ctx.transform(transform.a, transform.b, transform.c, transform.d, transform.dx, transform.dy);
-      } else {
+      if (transform === Matrix2d.EMPTY) {
         if (x !== 0 || y !== 0) ctx.translate(x, y);
         if (rotation !== 0) ctx.rotate(rotation * MathTool.DEG_TO_RAD);
         if (scaleX !== 1 || scaleY !== 1) ctx.scale(scaleX, scaleY);
         if (anchorX !== 0 || anchorY !== 0) ctx.translate(-anchorX, -anchorY);
+      } else {
+        ctx.transform(transform.a, transform.b, transform.c, transform.d, transform.dx, transform.dy);
       }
     }
 
+    // 透明度更新
     if (target.opacity > 0) ctx.globalAlpha *= target.opacity;
   }
 
-  remove(target: Node): void {
-
-  }
+  remove(target: Node): void {}
 
   clear(x: number, y: number, width: number, height: number): void {
     this.context.clearRect(x, y, width, height);
   }
 
-  resize(width: number, height: number): void {
-
-  }
+  resize(width: number, height: number): void {}
 }

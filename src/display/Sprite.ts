@@ -1,4 +1,4 @@
-import { HASH_OBJECT_TYPE } from './../config/constants';
+import { ENGINE_OBJECT_TYPE } from '../common/constants';
 import Texture from '../media/Texture';
 import Renderer from '../renderer/Renderer';
 import Node from './Node';
@@ -6,7 +6,7 @@ import Node from './Node';
 export default class Sprite extends Node {
   private _texture: Texture;
 
-  protected _instanceType: string = HASH_OBJECT_TYPE.Sprite;
+  protected _instanceType: string = ENGINE_OBJECT_TYPE.Sprite;
 
   constructor(src?: string) {
     super();

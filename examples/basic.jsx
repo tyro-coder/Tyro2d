@@ -104,10 +104,6 @@ const Basic = () => {
         ease: Ease.linear,
       },
     );
-
-    return () => {
-      Tyro2d.destroy();
-    };
   }, []);
 
   return <IPhone12 ref={gameRef} />;
