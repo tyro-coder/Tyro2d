@@ -1,9 +1,9 @@
 import Renderer from '../renderer/Renderer';
-import Utils from '../utils/Utils';
-import Node from './Node';
-import { ITickerHandler, IViewPort } from '../utils/Constants';
 import CanvasRenderer from '../renderer/CanvasRenderer';
-import { ENGINE_OBJECT_TYPE, RENDER_TYPE } from '../common/constants';
+import Node from './Node';
+import { ENGINE_OBJECT_TYPE, RENDER_TYPE, IViewPort } from '../common/constants';
+import Utils from '../utils/Utils';
+import { ITickerHandler } from '../utils/Ticker';
 
 export default class Stage extends Node implements ITickerHandler {
   public canvas: HTMLCanvasElement;

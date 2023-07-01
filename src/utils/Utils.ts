@@ -1,8 +1,7 @@
 import Browser from './Browser';
-import { IViewPort } from './Constants';
+import { IViewPort } from '../common/constants';
 
 export default class Utils {
-  /** @private */
   private static _gid: number = 1;
 
   /** 获取一个全局唯一ID。 */
@@ -28,15 +27,15 @@ export default class Utils {
       };
     }
 
-    const offsetX = ((Browser.win.pageXOffset || Browser.docElem.scrollLeft) - (Browser.docElem.clientLeft || 0)) || 0;
-    const offsetY = ((Browser.win.pageYOffset || Browser.docElem.scrollTop) - (Browser.docElem.clientTop || 0)) || 0;
+    const offsetX = (Browser.win.pageXOffset || Browser.docElem.scrollLeft) - (Browser.docElem.clientLeft || 0) || 0;
+    const offsetY = (Browser.win.pageYOffset || Browser.docElem.scrollTop) - (Browser.docElem.clientTop || 0) || 0;
     const styles: CSSStyleDeclaration = Browser.win.getComputedStyle ? getComputedStyle(ele) : ele.style;
     const parseIntFn = Browser.win.parseInt;
 
-    const padLeft = (parseIntFn(styles.paddingLeft) + parseIntFn(styles.borderLeftWidth)) || 0;
-    const padTop = (parseIntFn(styles.paddingTop) + parseIntFn(styles.borderTopWidth)) || 0;
-    const padRight = (parseIntFn(styles.paddingRight) + parseIntFn(styles.borderRightWidth)) || 0;
-    const padBottom = (parseIntFn(styles.paddingBottom) + parseIntFn(styles.borderBottomWidth)) || 0;
+    const padLeft = parseIntFn(styles.paddingLeft) + parseIntFn(styles.borderLeftWidth) || 0;
+    const padTop = parseIntFn(styles.paddingTop) + parseIntFn(styles.borderTopWidth) || 0;
+    const padRight = parseIntFn(styles.paddingRight) + parseIntFn(styles.borderRightWidth) || 0;
+    const padBottom = parseIntFn(styles.paddingBottom) + parseIntFn(styles.borderBottomWidth) || 0;
 
     const top = bounds.top || 0;
     const left = bounds.left || 0;
