@@ -1,4 +1,14 @@
 /**
+ * 可视区域结构
+ */
+export interface IViewPort {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
  * 引擎内部类枚举类型
  */
 export enum ENGINE_OBJECT_TYPE {
@@ -41,7 +51,9 @@ export enum ENGINE_OBJECT_TYPE {
   Tween = 'tyro2d_tween',
 }
 
-/** 引擎内部渲染方式 */
+/**
+ * 引擎内部渲染方式
+ */
 export enum RENDER_TYPE {
   /** HTML5 Canvas */
   CANVAS,

@@ -28,8 +28,13 @@ export default class Handler {
    * @param args 函数参数
    * @param once 是否只执行一次
    */
-  constructor(caller: any | null = null, callback: () => void | null = null, args: any[] | null = null, once: boolean = false) {
-      this.setTo(caller, callback, args, once);
+  constructor(
+    caller: any | null = null,
+    callback: () => void | null = null,
+    args: any[] | null = null,
+    once: boolean = false,
+  ) {
+    this.setTo(caller, callback, args, once);
   }
 
   /**
@@ -40,13 +45,18 @@ export default class Handler {
    * @param once 是否只执行一次
    * @returns 返回 handler 本身
    */
-  setTo(caller: any | null = null, callback: () => void | null = null, args: any[] | null = null, once: boolean = false): Handler {
-      this._id = Handler._gid++;
-      this.caller = caller;
-      this.callback = callback;
-      this.args = args;
-      this.once = once;
-      return this;
+  setTo(
+    caller: any | null = null,
+    callback: () => void | null = null,
+    args: any[] | null = null,
+    once: boolean = false,
+  ): Handler {
+    this._id = Handler._gid++;
+    this.caller = caller;
+    this.callback = callback;
+    this.args = args;
+    this.once = once;
+    return this;
   }
 
   /**
@@ -54,12 +64,12 @@ export default class Handler {
    * @returns 执行结果
    */
   run(): any {
-      if (this.callback == null) return null;
-      const id: number = this._id;
-      const result: any = this.callback.apply(this.caller, this.args);
-      // 如果 once 为 true 的话，执行完之后就清理当前 handler 实例
-      this._id === id && this.once && this.recover();
-      return result;
+    if (this.callback == null) return null;
+    const id: number = this._id;
+    const result: any = this.callback.apply(this.caller, this.args);
+    // 如果 once 为 true 的话，执行完之后就清理当前 handler 实例
+    this._id === id && this.once && this.recover();
+    return result;
   }
 
   /**
@@ -68,20 +78,20 @@ export default class Handler {
    * @returns 执行结果
    */
   runWith(data: any): any {
-      if (this.callback == null) return null;
-      const id: number = this._id;
-      let result: any;
-      if (data == null) {
-          result = this.callback.apply(this.caller, this.args);
-      } else if (!this.args && !Array.isArray(data)) {
-          result = this.callback.call(this.caller, data);
-      } else if (this.args) {
-          result = this.callback.apply(this.caller, this.args.concat(data));
-      } else {
-          result = this.callback.apply(this.caller, data);
-      }
-      this._id === id && this.once && this.recover();
-      return result;
+    if (this.callback == null) return null;
+    const id: number = this._id;
+    let result: any;
+    if (data == null) {
+      result = this.callback.apply(this.caller, this.args);
+    } else if (!this.args && !Array.isArray(data)) {
+      result = this.callback.call(this.caller, data);
+    } else if (this.args) {
+      result = this.callback.apply(this.caller, this.args.concat(data));
+    } else {
+      result = this.callback.apply(this.caller, data);
+    }
+    this._id === id && this.once && this.recover();
+    return result;
   }
 
   /**
@@ -89,20 +99,20 @@ export default class Handler {
    * @returns 清理后的对象
    */
   clear(): Handler {
-      this.caller = null;
-      this.callback = null;
-      this.args = null;
-      return this;
+    this.caller = null;
+    this.callback = null;
+    this.args = null;
+    return this;
   }
 
   /**
    * 清理当前handler实例，并回收到 Handler 对象池内
    */
   recover(): void {
-      if (this._id > 0) {
-          this._id = 0;
-          Handler._pool.push(this.clear());
-      }
+    if (this._id > 0) {
+      this._id = 0;
+      Handler._pool.push(this.clear());
+    }
   }
 
   /**
@@ -113,10 +123,15 @@ export default class Handler {
    * @param once 是否只执行一次，如果为true，回调后会直接回收，默认为true
    * @returns 返回创建的handler实例
    */
-  static create(caller: any | null = null, callback: () => void | null = null, args: any[] | null = null, once: boolean = true): Handler {
-      if (Handler._pool.length) {
-          return (Handler._pool.pop() as Handler).setTo(caller, callback, args, once);
-      }
-      return new Handler(caller, callback, args, once);
+  static create(
+    caller: any | null = null,
+    callback: () => void | null = null,
+    args: any[] | null = null,
+    once: boolean = true,
+  ): Handler {
+    if (Handler._pool.length) {
+      return (Handler._pool.pop() as Handler).setTo(caller, callback, args, once);
+    }
+    return new Handler(caller, callback, args, once);
   }
 }
