@@ -26,11 +26,10 @@ export default class SpriteFrame extends Sprite {
    * 如果是多个地址，则表示的是每一帧的纹理资源
    * @param speed 播放速度，表示的是几帧切换一次纹理，默认为 1，即跟游戏渲染帧保持一致
    */
-  constructor(src?: string | string[]) {
+  constructor(src?: string[]) {
     super();
 
-    // TODO: 加载纹理数据
-    this._loadTextureList();
+    this._loadTextureList(src);
   }
 
   public get textureList(): Texture[] {
@@ -38,7 +37,6 @@ export default class SpriteFrame extends Sprite {
   }
   public set textureList(value: Texture[]) {
     if (this.textureList !== value) {
-      // TODO: 加载纹理数组
       this._textureList = value;
     }
   }
@@ -69,11 +67,35 @@ export default class SpriteFrame extends Sprite {
     this._playing = false;
   }
 
-  // TODO: 加载纹理数组
-  private _loadTextureList() {}
+  /**
+   * 加载纹理数组
+   * @param srcList 纹理资源路径数组
+   */
+  private async _loadTextureList(srcList: string[]) {
+    const _textureList = await Promise.all(srcList.map((s) => new Texture(s)));
+    this._textureList = _textureList;
+  }
 
   private _onFrame(): void {
-    if (!this._playing) return;
+    const len = this._textureList.length;
+    if (!this._playing || len === 0) return;
+    // 未超出一次帧循环
+    if (this._frame <= len) {
+      this.texture = this._textureList[this._frame - 1];
+      this._frame++;
+      return;
+    }
+    // 超出一次帧循环
+    const nextRepeat = this._repeat - 1;
+    this._frame = 1;
+    if (nextRepeat > 0) {
+      this._repeat--;
+    } else if (nextRepeat === 0) {
+      this._speed = 1;
+      this._repeat = 1;
+      this._playing = false;
+      typeof this._callback === 'function' && this._callback(this);
+    }
   }
 
   protected _render(renderer: Renderer, delta: number): void {
