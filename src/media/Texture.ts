@@ -4,6 +4,7 @@ export default class Texture extends EventDispatcher {
   image: HTMLImageElement;
   width: number = 0;
   height: number = 0;
+  loader: Promise<Texture>;
   loaded: boolean = false;
 
   protected _instanceType: string = 'Texture';
@@ -16,16 +17,29 @@ export default class Texture extends EventDispatcher {
     }
   }
 
-  load(src: string): Promise<Texture> {
-    return new Promise((resolve) => {
-      const img = this.image = new Image();
+  /**
+   * 通过 src 加载地址
+   * @param src 资源地址
+   * @returns
+   */
+  load(src: string) {
+    if (this.loader) return;
+    this.loader = new Promise((resolve) => {
+      this.image = new Image();
+      const img = this.image;
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         img.onload = null;
+        img.onerror = null;
         this.width = img.naturalWidth;
         this.height = img.naturalHeight;
         this.loaded = true;
         resolve(this);
+      };
+      img.onerror = (e) => {
+        img.onload = null;
+        img.onerror = null;
+        console.error(e);
       };
       img.src = src;
     });

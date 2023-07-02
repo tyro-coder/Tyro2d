@@ -25,6 +25,8 @@ export enum ENGINE_OBJECT_TYPE {
   Scene = 'tyro2d_scene',
   /** 引擎精灵图节点类 */
   Sprite = 'tyro2d_sprite',
+  /** 引擎精灵图帧动画类 */
+  SpriteFrame = 'tyro2d_sprite_frame',
   /** 引擎文本渲染节点类 */
   Text = 'tyro2d_text',
   /** 引擎位图文本渲染节点类 */
