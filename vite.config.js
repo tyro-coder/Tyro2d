@@ -10,6 +10,14 @@ export default defineConfig({
       name: 'Tyro2d',
       fileName: 'tyro2d',
     },
+    rollupOptions: {
+      external: ['libpag'],
+      output: {
+        globals: {
+          libpag: 'libpag',
+        },
+      },
+    },
   },
   plugins: [
     dts({

@@ -45,7 +45,7 @@ export default class CanvasRenderer extends Renderer {
     }
 
     // 绘制精灵图
-    if (target.instanceType === ENGINE_OBJECT_TYPE.Sprite) {
+    if (target.instanceType === ENGINE_OBJECT_TYPE.Sprite || target.instanceType === ENGINE_OBJECT_TYPE.SpriteFrame) {
       const sprite = target as Sprite;
       const img = sprite.texture.image,
         sw = sprite.texture.width,

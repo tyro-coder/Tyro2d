@@ -25,6 +25,7 @@ export default class Sprite extends Node {
   }
 
   protected _render(renderer: Renderer, delta: number): void {
+    // 刷新精灵图的宽高
     if (!this.width && this._texture.width) this.width = this._texture.width;
     if (!this.height && this._texture.height) this.height = this._texture.height;
     super._render(renderer, delta);

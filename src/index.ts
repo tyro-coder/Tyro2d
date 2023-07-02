@@ -10,6 +10,7 @@ import EventDispatcher from './event/EventDispatcher';
 import Node from './display/Node';
 import Stage from './display/Stage';
 import Sprite from './display/Sprite';
+import SpriteFrame from './display/SpriteFrame';
 
 /** Utils */
 import Utils from './utils/Utils';
@@ -20,20 +21,4 @@ import Tween from './tween/Tween';
 
 import Tyro2d from './Tyro2d';
 
-export {
-  Tyro2d,
-
-  MathTool,
-  Vector2d,
-
-  Event,
-  EventDispatcher,
-
-  Node,
-  Stage,
-  Sprite,
-
-  Utils,
-  Tween,
-  Ease,
-};
+export { Tyro2d, MathTool, Vector2d, Event, EventDispatcher, Node, Stage, Sprite, SpriteFrame, Utils, Tween, Ease };

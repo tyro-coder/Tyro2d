@@ -1,4 +1,4 @@
-import { Tyro2d, Stage, Node, Tween, Ease } from '../';
+import { Tyro2d, Stage, Node, Tween, Ease, Sprite, SpriteFrame } from '../';
 import React, { useRef, useEffect } from 'react';
 import IPhone12 from './IPhone12';
 
@@ -104,6 +104,15 @@ const Basic = () => {
         ease: Ease.linear,
       },
     );
+
+    const bird = new SpriteFrame(['/img/bird_01.png', '/img/bird_02.png', '/img/bird_03.png']);
+    bird.x = 300;
+    bird.y = 400;
+    bird.play({
+      currentFrame: 1,
+      repeat: 0,
+    });
+    stage.addChild(bird);
   }, []);
 
   return <IPhone12 ref={gameRef} />;
