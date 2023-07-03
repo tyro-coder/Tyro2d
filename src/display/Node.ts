@@ -24,7 +24,7 @@ export default class Node extends EventDispatcher {
   public mouseEnable: boolean = true;
   /** 是否裁剪超出容器范围的子元素，默认 false */
   public clipChildren: boolean = false;
-  /** 节点的渲染方式 */
+  /** 节点的融合方式 */
   public blendMode: GlobalCompositeOperation = 'source-over';
 
   /** 节点实例类型 */

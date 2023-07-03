@@ -1,10 +1,19 @@
 import EventDispatcher from '../event/EventDispatcher';
 
 export default class Texture extends EventDispatcher {
+  /** 图片资源 */
   image: HTMLImageElement;
+  /** 绘制起点 x 坐标，指图片资源绘制部分的起点 */
+  x: number = 0;
+  /** 绘制起点 y 坐标，指图片资源绘制部分的起点 */
+  y: number = 0;
+  /** 绘制的宽度 */
   width: number = 0;
+  /** 绘制的高度 */
   height: number = 0;
+  /** 加载图片的加载器 */
   loader: Promise<Texture>;
+  /** 是否加载完成 */
   loaded: boolean = false;
 
   protected _instanceType: string = 'Texture';
